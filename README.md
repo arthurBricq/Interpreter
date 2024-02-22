@@ -19,16 +19,10 @@
 0
 > b
 0
-> a
-100
 > a - 10
 90
-> b  
-0
 > a    
 100
-> a - 10
-90
 > b = a - 10
 90
 > vars
@@ -40,23 +34,23 @@
 This is an example of how errors are handled.
 
 ```console
-  > a
-  UnknownVariable("a")
-  > 1 + 2 + a
-  UnknownVariable("a")
-  > a + b
-  MultipleError([UnknownVariable("a"), UnknownVariable("b")])
-  > a + b + c
-  MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), UnknownVariable("c")])])  
+> a
+UnknownVariable("a")
+> 1 + 2 + a
+UnknownVariable("a")
+> a + b
+MultipleError([UnknownVariable("a"), UnknownVariable("b")])
+> a + b + c
+MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), UnknownVariable("c")])])  
 ```
 
 # RoadMap
 
 **Next milestone** : a calculator
 
-- [ ] new operators: 
-    - [ ] ** for power
-    - [ ] MOD
+- new operators: 
+    - ** for power
+    - MOD
     
 **Next milestone** : Support float and integers
 
