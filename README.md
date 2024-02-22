@@ -44,8 +44,6 @@ This is an example of how errors are handled.
 
 **Next milestone** : a calculator
 
-- [ ] eval should return a result with possible errors
-- [ ] 2 * 2 * 2 is not parsed
 - [ ] new operators: 
     - [ ] ** for power
     - [ ] MOD

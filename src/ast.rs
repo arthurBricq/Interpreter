@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, ParenthesisExpr};
+use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, NegExpr, ParenthesisExpr};
 use crate::ast::ParserError::{MultipleError, UnknownError, UnknownVariable};
 use crate::token::{Op, Token};
 
@@ -27,7 +27,7 @@ impl Expr {
         match self {
             ConstExpr(value) => Ok(*value),
             Expr::NegExpr(expr) => {
-                match self.eval(buf) {
+                match expr.eval(buf) {
                     Ok(value) => Ok(-value),
                     Err(e) => Err(e)
                 }
@@ -163,7 +163,7 @@ impl<'a> Parser<'a> {
         None
     }
 
-    /// Matches constant, identifier or (expr)
+    /// Matches constant, identifier or (expr) or -(primary)
     fn parse_primary_expr(&mut self) -> Option<Expr> {
         // Constant
         if let Some(Token::Constant(value)) = self.peek() {
@@ -185,6 +185,13 @@ impl<'a> Parser<'a> {
             }
         }
         self.set_index(checkpoint);
+        // - Something
+        if let Some(Token::TokenOp(Op::Minus)) = self.peek() {
+            self.index += 1;
+            if let Some(expr) = self.parse_primary_expr() {
+                return Some(NegExpr(Box::new(expr)))
+            }
+        }
         None
     }
 }
@@ -203,10 +210,9 @@ mod tests {
         let tokens = tokenize(&text.to_string());
         print!("Building AST for <input> = <{text}>:   ");
         if let Some(ast) = build_tree(&tokens) {
-            println!("{ast:?}");
             assert_eq!(ast, expected);
         } else {
-            println!("ast construction yield to None")
+            assert!(false);
         }
     }
 
@@ -214,10 +220,8 @@ mod tests {
         let tokens = tokenize(&text.to_string());
         print!("Building AST for <input> = <{text}>:   ");
         if let Some(ast) = build_tree(&tokens) {
-            println!("{ast:?}");
             assert_eq!(format!("{ast:?}"), expected);
         } else {
-            println!("ast construction yield to None");
             assert!(false);
         }
     }
@@ -262,6 +266,24 @@ mod tests {
         assert_ast_eval("1 * 1 * 1", 1);
         assert_ast_eval("1 + 2 * 3", 7);
         assert_ast_eval("2 * 3 + 1", 7);
+        assert_ast_eval("2 * (3 + 1)", 8);
+        assert_ast_eval("(2 * 3) + 1", 7);
+        assert_ast_eval("1 + 1 + 1 + 1 + 1 + 1", 6);
+
+
+        assert_ast_eval("-1", -1);
+        assert_ast_eval("-1 + 1", 0);
+        assert_ast_eval("-1 + 2 * 2", 3);
+        assert_ast_eval("2 * 2 - 1", 3);
+    }
+
+    #[test]
+    fn test_negative_expr() {
+        let text = "-1 + 1".to_string();
+        let tokens = tokenize(&text);
+        let ast = build_tree(&tokens);
+        println!("{tokens:?}");
+        println!("{ast:?}");
     }
 
 }
