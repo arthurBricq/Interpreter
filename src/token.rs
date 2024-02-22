@@ -101,5 +101,6 @@ mod tests {
         assert_tokens(" (+) -      */    ", vec![LPar, TokenOp(Plus), RPar, TokenOp(Minus), TokenOp(Times), TokenOp(Div)]);
         assert_tokens("1+2-31", vec![Constant(1), TokenOp(Plus), Constant(2), TokenOp(Minus), Constant(31)]);
         assert_tokens("a = 1;", vec![Ident("a".to_string()), Equal, Constant(1), SemiColon]);
+        assert_tokens("1+1", vec![Constant(1), TokenOp(Plus), Constant(1)]);
     }
 }

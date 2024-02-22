@@ -1,4 +1,5 @@
-use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, ParenthesisExpr};
+use std::collections::HashMap;
+use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, ParenthesisExpr};
 use crate::token::{Op, Token};
 
 /// An expression is something that evaluates to something
@@ -10,6 +11,30 @@ pub enum Expr {
     BinaryExpr(Box<Expr>, Op, Box<Expr>),
     AssignmentExpr(String, Box<Expr>),
     IdentExpr(String)
+}
+
+impl Expr {
+    pub fn eval(&self, buf: &mut HashMap<String, i64>) -> i64 {
+        match self {
+            ConstExpr(value) => *value,
+            Expr::NegExpr(expr) => -self.eval(buf),
+            ParenthesisExpr(_) => 0,
+            BinaryExpr(l, op, r) => {
+                match op {
+                    Op::Plus => l.eval(buf) + r.eval(buf),
+                    Op::Minus => l.eval(buf) - r.eval(buf),
+                    Op::Times => l.eval(buf) * r.eval(buf),
+                    Op::Div => l.eval(buf) / r.eval(buf),
+                }
+            },
+            AssignmentExpr(name, value) => {
+                let eval = value.eval(buf);
+                buf.insert(name.clone(), eval);
+                eval
+            },
+            IdentExpr(name) => buf.get(name).unwrap().clone()
+        }
+    }
 }
 
 /// A struct to contain data related to parsing
@@ -117,6 +142,11 @@ impl<'a> Parser<'a> {
             self.index += 1;
             return Some(ConstExpr(value));
         }
+        // Identifier
+        if let Some(Token::Ident(s)) = self.peek() {
+            self.index += 1;
+            return Some(IdentExpr(s));
+        }
         // Parenthesis
         let checkpoint = self.index;
         if let Some(Token::LPar) = self.consume() {
@@ -162,12 +192,30 @@ mod tests {
         }
     }
 
+    fn assert_ast_with_text(text: &str, expected: &str) {
+        let tokens = tokenize(&text.to_string());
+        print!("Building AST for <input> = <{text}>:   ");
+        if let Some(ast) = build_tree(&tokens) {
+            println!("{ast:?}");
+            assert_eq!(format!("{ast:?}"), expected);
+        } else {
+            println!("ast construction yield to None");
+            assert!(false);
+        }
+    }
+
     #[test]
     fn test_ast() {
         assert_ast("1 + 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Plus, Box::new(ConstExpr(2))));
         assert_ast("123 / 2", BinaryExpr(Box::new(ConstExpr(123)), Op::Div, Box::new(ConstExpr(2))));
         assert_ast("1 * 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Times, Box::new(ConstExpr(2))));
         assert_ast("1 - 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Minus, Box::new(ConstExpr(2))));
-        assert_ast("(1+2)", ParenthesisExpr(Box::new(BinaryExpr(Box::new(ConstExpr(1)), Op::Plus, Box::new(ConstExpr(2))))));
+        assert_ast_with_text("(1+1)", "ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1)))");
+        assert_ast_with_text("(123+1) * 2 + 1", "BinaryExpr(BinaryExpr(ParenthesisExpr(BinaryExpr(ConstExpr(123), Plus, ConstExpr(1))), Times, ConstExpr(2)), Plus, ConstExpr(1))");
+
+        assert_ast_with_text("a = 1", "AssignmentExpr(\"a\", ConstExpr(1))");
+        assert_ast_with_text("a1 = 1", "AssignmentExpr(\"a1\", ConstExpr(1))");
+        assert_ast_with_text("a1 = (1+1)", "AssignmentExpr(\"a1\", ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1))))");
+        assert_ast_with_text("a", "IdentExpr(\"a\")");
     }
 }
