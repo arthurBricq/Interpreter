@@ -100,13 +100,13 @@ impl<'a> Parser<'a> {
         None
     }
 
-    /// Matches "Expr +/- Expr"
+    /// Matches "Mul Expr +/- Mul Expr"
     fn parse_additive_expr(&mut self) -> Option<Expr> {
         let checkpoint = self.index;
         if let Some(left) = self.parse_multiplicative_expr() {
             if let Some(Token::TokenOp(y@ Op::Plus) | Token::TokenOp(y @ Op::Minus)) = self.peek() {
                 self.index += 1;
-                if let Some(right) = self.parse_multiplicative_expr() {
+                if let Some(right) = self.parse_additive_expr() {
                     return Some(BinaryExpr(Box::new(left), y, Box::new(right)))
                 }
             } else {
@@ -218,6 +218,6 @@ mod tests {
         // assert_ast_with_text("a", "IdentExpr(\"a\")");
 
         // To fix
-        assert_ast_with_text("1+1+1", "BinaryExpr(ConstExpr(1), Plus, BinaryExpr(ConstExpr(1), Plus, ConstExpr(1))");
+        assert_ast_with_text("1+1+1", "BinaryExpr(ConstExpr(1), Plus, BinaryExpr(ConstExpr(1), Plus, ConstExpr(1)))");
     }
 }

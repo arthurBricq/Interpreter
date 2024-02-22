@@ -33,16 +33,22 @@ impl Shell {
                 s.pop();
             }
 
-            let tokens = tokenize(&s);
-            if let Some(ast) = build_tree(&tokens) {
-                let eval = self.eval(&ast);
-                // println!("   input = {s}");
-                // println!("   {tokens:?}");
-                // println!("  {ast:?}");
-                println!("  {eval:?}");
-            } else {
-                println!("   Parsing Error")
+            match s.as_str() {
+                "vars" => println!("{:?}", self.vars),
+                _ => {
+                    let tokens = tokenize(&s);
+                    if let Some(ast) = build_tree(&tokens) {
+                        let eval = self.eval(&ast);
+                        // println!("   input = {s}");
+                        // println!("   {tokens:?}");
+                        // println!("  {ast:?}");
+                        println!("  {eval:?}");
+                    } else {
+                        println!("   Parsing Error")
+                    }
+                }
             }
+
         }
 
     }
