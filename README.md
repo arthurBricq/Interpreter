@@ -1,28 +1,38 @@
 # Basic interpreter in Rust
 
-## Format 
+- Operation on integers: +, -, *, /
+- Python-like assignment
+- Usage of variables
 
-### Operations on integers
+## Example
 
-```
-1 + 1
-1 - 1
-1 * 1
-1 / 1
--2
-```
-
-### Group operations
-
-```
-(1 + 2) * 2
-```
-
-### Python-like Assignment
-
-```
-a = 1;
-(1 + a) * 2
+```console
+> 1 + 2 * 3
+7 
+> (1 + 2) * 3
+9 
+> a = 100
+100
+> 3 * a
+300
+> b = a - 100
+0
+> b
+0
+> a
+100
+> a - 10
+90
+> b  
+0
+> a    
+100
+> a - 10
+90
+> b = a - 10
+90
+> vars
+{"a": 100, "b": 90}
 ```
 
 ## Error handling
