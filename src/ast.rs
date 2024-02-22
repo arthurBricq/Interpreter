@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+
 use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, ParenthesisExpr};
 use crate::token::{Op, Token};
 
@@ -10,7 +11,7 @@ pub enum Expr {
     ParenthesisExpr(Box<Expr>),
     BinaryExpr(Box<Expr>, Op, Box<Expr>),
     AssignmentExpr(String, Box<Expr>),
-    IdentExpr(String)
+    IdentExpr(String),
 }
 
 impl Expr {
@@ -26,12 +27,12 @@ impl Expr {
                     Op::Times => l.eval(buf) * r.eval(buf),
                     Op::Div => l.eval(buf) / r.eval(buf),
                 }
-            },
+            }
             AssignmentExpr(name, value) => {
                 let eval = value.eval(buf);
                 buf.insert(name.clone(), eval);
                 eval
-            },
+            }
             IdentExpr(name) => buf.get(name).unwrap().clone()
         }
     }
@@ -42,12 +43,12 @@ impl Expr {
 /// Top Down Parser
 struct Parser<'a> {
     tokens: &'a Vec<Token>,
-    index: usize
+    index: usize,
 }
 
 impl<'a> Parser<'a> {
     fn new(tokens: &'a Vec<Token>) -> Self {
-        Self {tokens, index: 0}
+        Self { tokens, index: 0 }
     }
 
     /// Inspect current token
@@ -92,7 +93,7 @@ impl<'a> Parser<'a> {
         if let Some(Token::Ident(name)) = self.consume() {
             if let Some(Token::Equal) = self.consume() {
                 if let Some(expr) = self.parse_expression() {
-                    return Some(AssignmentExpr(name.clone(), Box::new(expr)))
+                    return Some(AssignmentExpr(name.clone(), Box::new(expr)));
                 }
             }
         }
@@ -104,10 +105,10 @@ impl<'a> Parser<'a> {
     fn parse_additive_expr(&mut self) -> Option<Expr> {
         let checkpoint = self.index;
         if let Some(left) = self.parse_multiplicative_expr() {
-            if let Some(Token::TokenOp(y@ Op::Plus) | Token::TokenOp(y @ Op::Minus)) = self.peek() {
+            if let Some(Token::TokenOp(y @ Op::Plus) | Token::TokenOp(y @ Op::Minus)) = self.peek() {
                 self.index += 1;
                 if let Some(right) = self.parse_additive_expr() {
-                    return Some(BinaryExpr(Box::new(left), y, Box::new(right)))
+                    return Some(BinaryExpr(Box::new(left), y, Box::new(right)));
                 }
             } else {
                 return Some(left);
@@ -121,13 +122,13 @@ impl<'a> Parser<'a> {
     fn parse_multiplicative_expr(&mut self) -> Option<Expr> {
         let checkpoint = self.index;
         if let Some(left) = self.parse_primary_expr() {
-            if let Some(Token::TokenOp(y@ Op::Times) | Token::TokenOp(y @ Op::Div)) = self.peek() {
+            if let Some(Token::TokenOp(y @ Op::Times) | Token::TokenOp(y @ Op::Div)) = self.peek() {
                 self.index += 1;
-                if let Some(right) = self.parse_primary_expr() {
-                    return Some(BinaryExpr(Box::new(left), y, Box::new(right)))
+                if let Some(right) = self.parse_multiplicative_expr() {
+                    return Some(BinaryExpr(Box::new(left), y, Box::new(right)));
                 }
             } else {
-                return Some(left)
+                return Some(left);
             }
         }
         self.set_index(checkpoint);
@@ -151,7 +152,7 @@ impl<'a> Parser<'a> {
         if let Some(Token::LPar) = self.consume() {
             if let Some(expr) = self.parse_expression() {
                 if let Some(Token::RPar) = self.consume() {
-                    return Some(ParenthesisExpr(Box::new(expr)))
+                    return Some(ParenthesisExpr(Box::new(expr)));
                 }
             }
         }
@@ -169,16 +170,6 @@ pub fn build_tree(tokens: &Vec<Token>) -> Option<Expr> {
 mod tests {
     use crate::ast::*;
     use crate::token::*;
-
-    fn print_ast(text: &str) {
-        let tokens = tokenize(&text.to_string());
-        print!("Building AST for <input> = <{text}>:   ");
-        if let Some(ast) = build_tree(&tokens) {
-            println!("{ast:?}");
-        } else {
-            println!("ast construction yield to None")
-        }
-    }
 
     fn assert_ast(text: &str, expected: Expr) {
         let tokens = tokenize(&text.to_string());
@@ -203,21 +194,43 @@ mod tests {
         }
     }
 
+
     #[test]
     fn test_ast() {
-        // assert_ast("1 + 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Plus, Box::new(ConstExpr(2))));
-        // assert_ast("123 / 2", BinaryExpr(Box::new(ConstExpr(123)), Op::Div, Box::new(ConstExpr(2))));
-        // assert_ast("1 * 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Times, Box::new(ConstExpr(2))));
-        // assert_ast("1 - 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Minus, Box::new(ConstExpr(2))));
-        // assert_ast_with_text("(1+1)", "ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1)))");
-        // assert_ast_with_text("(123+1) * 2 + 1", "BinaryExpr(BinaryExpr(ParenthesisExpr(BinaryExpr(ConstExpr(123), Plus, ConstExpr(1))), Times, ConstExpr(2)), Plus, ConstExpr(1))");
-        //
-        // assert_ast_with_text("a = 1", "AssignmentExpr(\"a\", ConstExpr(1))");
-        // assert_ast_with_text("a1 = 1", "AssignmentExpr(\"a1\", ConstExpr(1))");
-        // assert_ast_with_text("a1 = (1+1)", "AssignmentExpr(\"a1\", ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1))))");
-        // assert_ast_with_text("a", "IdentExpr(\"a\")");
+        assert_ast("1 + 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Plus, Box::new(ConstExpr(2))));
+        assert_ast("123 / 2", BinaryExpr(Box::new(ConstExpr(123)), Op::Div, Box::new(ConstExpr(2))));
+        assert_ast("1 * 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Times, Box::new(ConstExpr(2))));
+        assert_ast("1 - 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Minus, Box::new(ConstExpr(2))));
+
+        assert_ast_with_text("(1+1)", "ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1)))");
+        assert_ast_with_text("(123+1) * 2 + 1", "BinaryExpr(BinaryExpr(ParenthesisExpr(BinaryExpr(ConstExpr(123), Plus, ConstExpr(1))), Times, ConstExpr(2)), Plus, ConstExpr(1))");
+
+        assert_ast_with_text("a = 1", "AssignmentExpr(\"a\", ConstExpr(1))");
+        assert_ast_with_text("a1 = 1", "AssignmentExpr(\"a1\", ConstExpr(1))");
+        assert_ast_with_text("a1 = (1+1)", "AssignmentExpr(\"a1\", ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1))))");
+        assert_ast_with_text("a", "IdentExpr(\"a\")");
 
         // To fix
         assert_ast_with_text("1+1+1", "BinaryExpr(ConstExpr(1), Plus, BinaryExpr(ConstExpr(1), Plus, ConstExpr(1)))");
+        assert_ast_with_text("1*1*1", "BinaryExpr(ConstExpr(1), Times, BinaryExpr(ConstExpr(1), Times, ConstExpr(1)))");
     }
+
+    fn assert_ast_eval(text: &str, expected: i64) {
+        let tokens = tokenize(&text.to_string());
+        if let Some(ast) = build_tree(&tokens) {
+            assert_eq!(ast.eval(&mut HashMap::new()), expected);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn test_ast_eval() {
+        assert_ast_eval("1", 1);
+        assert_ast_eval("1 + 1 + 1", 3);
+        assert_ast_eval("1 * 1 * 1", 1);
+        assert_ast_eval("1 + 2 * 3", 7);
+        assert_ast_eval("2 * 3 + 1", 7);
+    }
+
 }

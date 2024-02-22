@@ -30,9 +30,7 @@ a = 1;
 **Next milestone** : a calculator
 
 - [ ] eval should return a result with possible errors
-- [ ] 1 + 1 + 1 or 2 * 2 * 2 is not parsed
-- [ ] add some commands in the shell like `vars` to print variables
-- [ ] Support
+- [ ] 2 * 2 * 2 is not parsed
 - [ ] new operators: 
     - [ ] ** for power
     - [ ] MOD

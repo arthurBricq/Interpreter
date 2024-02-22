@@ -1,7 +1,6 @@
-use std::io::{stdin, stdout, Write};
-use crate::ast::build_tree;
+use std::io::Write;
+
 use crate::shell::Shell;
-use crate::token::tokenize;
 
 mod token;
 mod ast;
