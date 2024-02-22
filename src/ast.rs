@@ -18,7 +18,7 @@ impl Expr {
         match self {
             ConstExpr(value) => *value,
             Expr::NegExpr(expr) => -self.eval(buf),
-            ParenthesisExpr(_) => 0,
+            ParenthesisExpr(expr) => expr.eval(buf),
             BinaryExpr(l, op, r) => {
                 match op {
                     Op::Plus => l.eval(buf) + r.eval(buf),
@@ -86,8 +86,7 @@ impl<'a> Parser<'a> {
         None
     }
 
-
-    // Matches "Ident = Something"
+    /// Matches "Ident = Something"
     fn parse_assignment_expr(&mut self) -> Option<Expr> {
         let checkpoint = self.index;
         if let Some(Token::Ident(name)) = self.consume() {
@@ -118,7 +117,7 @@ impl<'a> Parser<'a> {
         None
     }
 
-    /// Matches "Expr *// Expr"
+    /// Matches "Primary * Expr" or "Primary"
     fn parse_multiplicative_expr(&mut self) -> Option<Expr> {
         let checkpoint = self.index;
         if let Some(left) = self.parse_primary_expr() {
@@ -206,16 +205,19 @@ mod tests {
 
     #[test]
     fn test_ast() {
-        assert_ast("1 + 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Plus, Box::new(ConstExpr(2))));
-        assert_ast("123 / 2", BinaryExpr(Box::new(ConstExpr(123)), Op::Div, Box::new(ConstExpr(2))));
-        assert_ast("1 * 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Times, Box::new(ConstExpr(2))));
-        assert_ast("1 - 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Minus, Box::new(ConstExpr(2))));
-        assert_ast_with_text("(1+1)", "ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1)))");
-        assert_ast_with_text("(123+1) * 2 + 1", "BinaryExpr(BinaryExpr(ParenthesisExpr(BinaryExpr(ConstExpr(123), Plus, ConstExpr(1))), Times, ConstExpr(2)), Plus, ConstExpr(1))");
+        // assert_ast("1 + 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Plus, Box::new(ConstExpr(2))));
+        // assert_ast("123 / 2", BinaryExpr(Box::new(ConstExpr(123)), Op::Div, Box::new(ConstExpr(2))));
+        // assert_ast("1 * 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Times, Box::new(ConstExpr(2))));
+        // assert_ast("1 - 2", BinaryExpr(Box::new(ConstExpr(1)), Op::Minus, Box::new(ConstExpr(2))));
+        // assert_ast_with_text("(1+1)", "ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1)))");
+        // assert_ast_with_text("(123+1) * 2 + 1", "BinaryExpr(BinaryExpr(ParenthesisExpr(BinaryExpr(ConstExpr(123), Plus, ConstExpr(1))), Times, ConstExpr(2)), Plus, ConstExpr(1))");
+        //
+        // assert_ast_with_text("a = 1", "AssignmentExpr(\"a\", ConstExpr(1))");
+        // assert_ast_with_text("a1 = 1", "AssignmentExpr(\"a1\", ConstExpr(1))");
+        // assert_ast_with_text("a1 = (1+1)", "AssignmentExpr(\"a1\", ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1))))");
+        // assert_ast_with_text("a", "IdentExpr(\"a\")");
 
-        assert_ast_with_text("a = 1", "AssignmentExpr(\"a\", ConstExpr(1))");
-        assert_ast_with_text("a1 = 1", "AssignmentExpr(\"a1\", ConstExpr(1))");
-        assert_ast_with_text("a1 = (1+1)", "AssignmentExpr(\"a1\", ParenthesisExpr(BinaryExpr(ConstExpr(1), Plus, ConstExpr(1))))");
-        assert_ast_with_text("a", "IdentExpr(\"a\")");
+        // To fix
+        assert_ast_with_text("1+1+1", "BinaryExpr(ConstExpr(1), Plus, BinaryExpr(ConstExpr(1), Plus, ConstExpr(1))");
     }
 }

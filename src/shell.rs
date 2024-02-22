@@ -36,9 +36,9 @@ impl Shell {
             let tokens = tokenize(&s);
             if let Some(ast) = build_tree(&tokens) {
                 let eval = self.eval(&ast);
-                println!("   input = {s}");
-                println!("   {tokens:?}");
-                println!("  {ast:?}");
+                // println!("   input = {s}");
+                // println!("   {tokens:?}");
+                // println!("  {ast:?}");
                 println!("  {eval:?}");
             } else {
                 println!("   Parsing Error")
