@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, ParenthesisExpr};
+use crate::ast::ParserError::{MultipleError, UnknownError, UnknownVariable};
 use crate::token::{Op, Token};
 
 /// An expression is something that evaluates to something
@@ -14,26 +15,53 @@ pub enum Expr {
     IdentExpr(String),
 }
 
+#[derive(Debug)]
+pub enum ParserError {
+    UnknownError,
+    UnknownVariable(String),
+    MultipleError(Vec<Box<ParserError>>)
+}
+
 impl Expr {
-    pub fn eval(&self, buf: &mut HashMap<String, i64>) -> i64 {
+    pub fn eval(&self, buf: &mut HashMap<String, i64>) -> Result<i64, ParserError> {
         match self {
-            ConstExpr(value) => *value,
-            Expr::NegExpr(expr) => -self.eval(buf),
+            ConstExpr(value) => Ok(*value),
+            Expr::NegExpr(expr) => {
+                match self.eval(buf) {
+                    Ok(value) => Ok(-value),
+                    Err(e) => Err(e)
+                }
+            },
             ParenthesisExpr(expr) => expr.eval(buf),
             BinaryExpr(l, op, r) => {
-                match op {
-                    Op::Plus => l.eval(buf) + r.eval(buf),
-                    Op::Minus => l.eval(buf) - r.eval(buf),
-                    Op::Times => l.eval(buf) * r.eval(buf),
-                    Op::Div => l.eval(buf) / r.eval(buf),
+                match (l.eval(buf), r.eval(buf)) {
+                    (Ok(l), Ok(r)) => {
+                        Ok(match op {
+                            Op::Plus => l + r,
+                            Op::Minus => l - r,
+                            Op::Times => l * r,
+                            Op::Div => l / r,
+                        })
+                    }
+                    (Err(r), Ok(_)) => Err(r),
+                    (Ok(_), Err(err)) => Err(err),
+                    (Err(err1), Err(err2)) => Err(MultipleError(vec![Box::new(err1), Box::new(err2)]))
                 }
             }
             AssignmentExpr(name, value) => {
                 let eval = value.eval(buf);
-                buf.insert(name.clone(), eval);
+                match eval {
+                    Ok(value) => {buf.insert(name.clone(), value);},
+                    _ => {}
+                }
                 eval
             }
-            IdentExpr(name) => buf.get(name).unwrap().clone()
+            IdentExpr(name) => {
+                match buf.get(name) {
+                    Some(value) => Ok(*value),
+                    None => Err(UnknownVariable(name.clone()))
+                }
+            }
         }
     }
 }
@@ -218,7 +246,10 @@ mod tests {
     fn assert_ast_eval(text: &str, expected: i64) {
         let tokens = tokenize(&text.to_string());
         if let Some(ast) = build_tree(&tokens) {
-            assert_eq!(ast.eval(&mut HashMap::new()), expected);
+            match ast.eval(&mut HashMap::new()) {
+                Ok(value) => assert_eq!(value, expected),
+                Err(_) => assert!(false)
+            }
         } else {
             assert!(false);
         }

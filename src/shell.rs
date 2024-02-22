@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::{stdin, stdout, Write};
-use crate::ast::{build_tree, Expr};
+use crate::ast::{build_tree, Expr, ParserError};
 use crate::token::tokenize;
 
 pub struct Shell {
@@ -14,12 +14,11 @@ impl Shell {
         }
     }
 
-    fn eval(&mut self, ast: &Expr) -> i64 {
+    fn eval(&mut self, ast: &Expr) -> Result<i64, ParserError> {
         ast.eval(&mut self.vars)
     }
 
     pub fn run(&mut self) {
-
         loop {
             // Shell parsing
             print!("  > ");
@@ -38,11 +37,10 @@ impl Shell {
                 _ => {
                     let tokens = tokenize(&s);
                     if let Some(ast) = build_tree(&tokens) {
-                        let eval = self.eval(&ast);
-                        // println!("   input = {s}");
-                        // println!("   {tokens:?}");
-                        // println!("  {ast:?}");
-                        println!("  {eval:?}");
+                        match self.eval(&ast) {
+                            Ok(value) => println!("  {value:?}"),
+                            Err(e) => println!("  {e:?}")
+                        }
                     } else {
                         println!("   Parsing Error")
                     }
