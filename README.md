@@ -58,5 +58,7 @@ MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), Unknow
 
 **Next milestone**: functions 
 
+- multi-line parsing: introduce statements
+
 **Next milestone**: web-assembly deployment
 

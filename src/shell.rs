@@ -1,16 +1,17 @@
+use crate::ast::{Expr, ParserError};
+use crate::parser::parse_expression;
+use crate::token::tokenize;
 use std::collections::HashMap;
 use std::io::{stdin, stdout, Write};
-use crate::ast::{build_tree, Expr, ParserError};
-use crate::token::tokenize;
 
 pub struct Shell {
-    vars: HashMap<String, i64>
+    vars: HashMap<String, i64>,
 }
 
 impl Shell {
     pub fn new() -> Self {
         Self {
-            vars: HashMap::new()
+            vars: HashMap::new(),
         }
     }
 
@@ -24,11 +25,13 @@ impl Shell {
             print!("  > ");
             let mut s = String::new();
             let _ = stdout().flush();
-            stdin().read_line(&mut s).expect("Did not enter a correct string");
-            if let Some('\n')=s.chars().next_back() {
+            stdin()
+                .read_line(&mut s)
+                .expect("Did not enter a correct string");
+            if let Some('\n') = s.chars().next_back() {
                 s.pop();
             }
-            if let Some('\r')=s.chars().next_back() {
+            if let Some('\r') = s.chars().next_back() {
                 s.pop();
             }
 
@@ -36,18 +39,16 @@ impl Shell {
                 "vars" => println!("{:?}", self.vars),
                 _ => {
                     let tokens = tokenize(&s);
-                    if let Some(ast) = build_tree(&tokens) {
+                    if let Some(ast) = parse_expression(&tokens) {
                         match self.eval(&ast) {
                             Ok(value) => println!("  {value:?}"),
-                            Err(e) => println!("  {e:?}")
+                            Err(e) => println!("  {e:?}"),
                         }
                     } else {
                         println!("   Parsing Error")
                     }
                 }
             }
-
         }
-
     }
 }

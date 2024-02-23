@@ -3,7 +3,10 @@ use crate::token::Token::{Constant, Equal, Ident, LPar, RPar, SemiColon, TokenOp
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
-    Plus, Minus, Times, Div
+    Plus,
+    Minus,
+    Times,
+    Div,
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -15,10 +18,9 @@ pub enum Token {
     Constant(i64),
     SemiColon,
     Equal,
-    Div,
 }
 
-pub fn tokenize(input: & String) -> Vec<Token> {
+pub fn tokenize(input: &String) -> Vec<Token> {
     let mut tokens = vec![];
 
     let mut chars = input.chars();
@@ -38,11 +40,11 @@ pub fn tokenize(input: & String) -> Vec<Token> {
                     num = 10 * num + next_num;
                     ch = chars.next();
                 } else {
-                    break
+                    break;
                 }
             }
             tokens.push(Constant(num as i64));
-            continue
+            continue;
         }
 
         // Parse an ident
@@ -54,11 +56,11 @@ pub fn tokenize(input: & String) -> Vec<Token> {
                     tmp.push(next_ch);
                     ch = chars.next();
                 } else {
-                    break
+                    break;
                 }
             }
             tokens.push(Ident(tmp));
-            continue
+            continue;
         }
 
         match ch.unwrap() {
@@ -71,7 +73,9 @@ pub fn tokenize(input: & String) -> Vec<Token> {
             '=' => tokens.push(Equal),
             ';' => tokens.push(SemiColon),
             ' ' | '\r' | '\t' | '\n' => {}
-            _ => { panic!("Unsupported char: {ch:?}") }
+            _ => {
+                panic!("Unsupported char: {ch:?}")
+            }
         }
 
         ch = chars.next();
@@ -84,10 +88,10 @@ pub fn tokenize(input: & String) -> Vec<Token> {
 
 #[cfg(test)]
 mod tests {
-    use crate::token::{Token, tokenize};
     use crate::token::Op::{Div, Minus, Plus, Times};
+    use crate::token::{tokenize, Token};
 
-    use crate::token::Token::{Constant, Equal, Ident, LPar, TokenOp, RPar, SemiColon};
+    use crate::token::Token::{Constant, Equal, Ident, LPar, RPar, SemiColon, TokenOp};
 
     fn assert_tokens(text: &str, tokens: Vec<Token>) {
         let computed = tokenize(&text.to_string());
@@ -96,11 +100,43 @@ mod tests {
 
     #[test]
     fn test_tokenizer() {
-        assert_tokens("+-*/", vec![TokenOp(Plus), TokenOp(Minus), TokenOp(Times), TokenOp(Div)]);
-        assert_tokens(" + -      */    ", vec![TokenOp(Plus), TokenOp(Minus), TokenOp(Times), TokenOp(Div)]);
-        assert_tokens(" (+) -      */    ", vec![LPar, TokenOp(Plus), RPar, TokenOp(Minus), TokenOp(Times), TokenOp(Div)]);
-        assert_tokens("1+2-31", vec![Constant(1), TokenOp(Plus), Constant(2), TokenOp(Minus), Constant(31)]);
-        assert_tokens("a = 1;", vec![Ident("a".to_string()), Equal, Constant(1), SemiColon]);
+        assert_tokens(
+            "+-*/",
+            vec![TokenOp(Plus), TokenOp(Minus), TokenOp(Times), TokenOp(Div)],
+        );
+        assert_tokens(
+            " + -      */    ",
+            vec![TokenOp(Plus), TokenOp(Minus), TokenOp(Times), TokenOp(Div)],
+        );
+        assert_tokens(
+            " (+) -      */    ",
+            vec![
+                LPar,
+                TokenOp(Plus),
+                RPar,
+                TokenOp(Minus),
+                TokenOp(Times),
+                TokenOp(Div),
+            ],
+        );
+        assert_tokens(
+            "1+2-31",
+            vec![
+                Constant(1),
+                TokenOp(Plus),
+                Constant(2),
+                TokenOp(Minus),
+                Constant(31),
+            ],
+        );
+        assert_tokens(
+            "a = 1;",
+            vec![Ident("a".to_string()), Equal, Constant(1), SemiColon],
+        );
         assert_tokens("1+1", vec![Constant(1), TokenOp(Plus), Constant(1)]);
+        assert_tokens(
+            "1+1;",
+            vec![Constant(1), TokenOp(Plus), Constant(1), SemiColon],
+        );
     }
 }
