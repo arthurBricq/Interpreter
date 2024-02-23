@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, ParenthesisExpr};
-use crate::ast::ParserError::{MultipleError, UnknownVariable};
+use crate::error::ParserError;
+use crate::error::ParserError::{MultipleError, UnknownVariable};
 use crate::token::Op;
 
 #[derive(Debug)]
@@ -19,13 +20,6 @@ pub enum Expr {
     BinaryExpr(Box<Expr>, Op, Box<Expr>),
     AssignmentExpr(String, Box<Expr>),
     IdentExpr(String),
-}
-
-#[derive(Debug)]
-pub enum ParserError {
-    UnknownError,
-    UnknownVariable(String),
-    MultipleError(Vec<Box<ParserError>>),
 }
 
 impl Expr {

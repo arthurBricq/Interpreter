@@ -1,8 +1,10 @@
-use crate::ast::{Expr, ParserError};
-use crate::parser::parse_expression;
-use crate::token::tokenize;
 use std::collections::HashMap;
 use std::io::{stdin, stdout, Write};
+
+use crate::ast::Expr;
+use crate::error::ParserError;
+use crate::parser::parse_expression;
+use crate::token::tokenize;
 
 pub struct Shell {
     vars: HashMap<String, i64>,
@@ -22,7 +24,7 @@ impl Shell {
     pub fn run(&mut self) {
         loop {
             // Shell parsing
-            print!("  > ");
+            print!(">>> ");
             let mut s = String::new();
             let _ = stdout().flush();
             stdin()
@@ -40,9 +42,10 @@ impl Shell {
                 _ => {
                     let tokens = tokenize(&s);
                     if let Some(ast) = parse_expression(&tokens) {
+                        println!("{ast:?}");
                         match self.eval(&ast) {
-                            Ok(value) => println!("  {value:?}"),
-                            Err(e) => println!("  {e:?}"),
+                            Ok(value) => println!("{value:?}"),
+                            Err(e) => println!("{e:?}"),
                         }
                     } else {
                         println!("   Parsing Error")
