@@ -68,7 +68,7 @@ mod tests {
 
     fn assert_ast_eval(text: &str, expected: i64) {
         let tokens = tokenize(&text.to_string());
-        if let Some(ast) = parse_expression(&tokens) {
+        if let Some(ast) = parse_expression(&tokens.unwrap()) {
             match ast.eval(&mut HashMap::new()) {
                 Ok(value) => assert_eq!(value, expected),
                 Err(_) => assert!(false),

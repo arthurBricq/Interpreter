@@ -1,7 +1,6 @@
 
 #[derive(Debug)]
 pub enum ParserError {
-    UnknownError,
     UnknownVariable(String),
     MultipleError(Vec<Box<ParserError>>),
 }

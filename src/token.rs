@@ -1,3 +1,5 @@
+use crate::error::TokenError;
+use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
 use crate::token::Token::{Constant, Equal, Ident, LPar, RPar, SemiColon, TokenOp};
 
@@ -20,7 +22,7 @@ pub enum Token {
     Equal,
 }
 
-pub fn tokenize(input: &String) -> Vec<Token> {
+pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
     let mut tokens = vec![];
 
     let mut chars = input.chars();
@@ -74,16 +76,14 @@ pub fn tokenize(input: &String) -> Vec<Token> {
             ';' => tokens.push(SemiColon),
             ' ' | '\r' | '\t' | '\n' => {}
             _ => {
-                panic!("Unsupported char: {ch:?}")
+                return Err(UnknownChar(ch.unwrap()))
             }
         }
 
         ch = chars.next();
     }
 
-    while let Some(ch) = chars.next() {}
-
-    tokens
+    Ok(tokens)
 }
 
 #[cfg(test)]
@@ -94,7 +94,7 @@ mod tests {
     use crate::token::Token::{Constant, Equal, Ident, LPar, RPar, SemiColon, TokenOp};
 
     fn assert_tokens(text: &str, tokens: Vec<Token>) {
-        let computed = tokenize(&text.to_string());
+        let computed = tokenize(&text.to_string()).unwrap();
         assert_eq!(computed, tokens)
     }
 

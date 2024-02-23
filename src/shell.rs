@@ -40,15 +40,19 @@ impl Shell {
             match s.as_str() {
                 "vars" => println!("{:?}", self.vars),
                 _ => {
-                    let tokens = tokenize(&s);
-                    if let Some(ast) = parse_expression(&tokens) {
-                        println!("{ast:?}");
-                        match self.eval(&ast) {
-                            Ok(value) => println!("{value:?}"),
-                            Err(e) => println!("{e:?}"),
+                    match tokenize(&s) {
+                        Ok(tokens) => {
+                            if let Some(ast) = parse_expression(&tokens) {
+                                println!("{ast:?}");
+                                match self.eval(&ast) {
+                                    Ok(value) => println!("{value:?}"),
+                                    Err(e) => println!("Error while evaluating: {e:?}"),
+                                }
+                            } else {
+                                println!("Parsing Error")
+                            }
                         }
-                    } else {
-                        println!("   Parsing Error")
+                        Err(err) => println!("Error while tokenizing: {err:?}")
                     }
                 }
             }

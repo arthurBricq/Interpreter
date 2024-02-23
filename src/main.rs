@@ -1,5 +1,3 @@
-use std::io::Write;
-
 use crate::shell::Shell;
 
 mod ast;

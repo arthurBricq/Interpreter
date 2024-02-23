@@ -166,7 +166,7 @@ mod tests {
     fn assert_ast(text: &str, expected: Expr) {
         let tokens = tokenize(&text.to_string());
         print!("Building AST for <input> = <{text}>:   ");
-        if let Some(ast) = parse_expression(&tokens) {
+        if let Some(ast) = parse_expression(&tokens.unwrap()) {
             assert_eq!(ast, expected);
         } else {
             assert!(false);
@@ -176,7 +176,7 @@ mod tests {
     fn assert_ast_with_text(text: &str, expected: &str) {
         let tokens = tokenize(&text.to_string());
         print!("Building AST for <input> = <{text}>:   ");
-        if let Some(ast) = parse_expression(&tokens) {
+        if let Some(ast) = parse_expression(&tokens.unwrap()) {
             assert_eq!(format!("{ast:?}"), expected);
         } else {
             assert!(false);
@@ -231,7 +231,7 @@ mod tests {
     fn test_parse_single_statement() {
         let text = "a=1;".to_string();
         let tokens = tokenize(&text);
-        let statements = parse_statements(&tokens);
+        let statements = parse_statements(&tokens.unwrap());
         assert_eq!(1, statements.len());
         println!("{statements:?}");
     }
@@ -240,7 +240,7 @@ mod tests {
     fn test_parse_multiple_statements() {
         let text = "a=1;b=1;c=a+b;".to_string();
         let tokens = tokenize(&text);
-        let statements = parse_statements(&tokens);
+        let statements = parse_statements(&tokens.unwrap());
         assert_eq!(3, statements.len());
         println!("{statements:#?}");
     }
