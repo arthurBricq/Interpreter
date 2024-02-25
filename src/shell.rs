@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::io::{stdin, stdout, Write};
+use colored::Colorize;
 
 use crate::ast::Expr;
 use crate::error::ParserError;
@@ -17,9 +18,6 @@ impl Shell {
         }
     }
 
-    fn eval(&mut self, ast: &Expr) -> Result<i64, ParserError> {
-        ast.eval(&mut self.vars)
-    }
 
     pub fn run(&mut self) {
         loop {
@@ -39,23 +37,29 @@ impl Shell {
 
             match s.as_str() {
                 "vars" => println!("{:?}", self.vars),
-                _ => {
-                    match tokenize(&s) {
-                        Ok(tokens) => {
-                            if let Some(ast) = parse_expression(&tokens) {
-                                println!("{ast:?}");
-                                match self.eval(&ast) {
-                                    Ok(value) => println!("{value:?}"),
-                                    Err(e) => println!("Error while evaluating: {e:?}"),
-                                }
-                            } else {
-                                println!("Parsing Error")
-                            }
-                        }
-                        Err(err) => println!("Error while tokenizing: {err:?}")
+                _ => self.interpret(&s)
+            }
+        }
+    }
+
+    fn eval(&mut self, ast: &Expr) -> Result<i64, ParserError> {
+        ast.eval(&mut self.vars)
+    }
+
+    fn interpret(&mut self, text: &String) {
+        match tokenize(text) {
+            Ok(tokens) => {
+                if let Some(ast) = parse_expression(&tokens) {
+                    println!("{}", "{ast:?}".italic().green());
+                    match self.eval(&ast) {
+                        Ok(value) => println!("{value:?}"),
+                        Err(e) => println!("{} {e:?}", "Error while evaluating: ".red()),
                     }
+                } else {
+                    println!("{}", "Parsing Error".red())
                 }
             }
+            Err(err) => println!("{} {err:?}", "Error while tokenizing: ".red())
         }
     }
 }
