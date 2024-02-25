@@ -1,14 +1,18 @@
 use std::collections::HashMap;
 
 use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, ParenthesisExpr};
-use crate::error::ParserError;
-use crate::error::ParserError::{MultipleError, UnknownVariable};
+use crate::error::EvalError;
+use crate::error::EvalError::{MultipleError, UnknownVariable};
 use crate::token::Op;
 
 #[derive(Debug)]
 pub enum Statement {
     /// A statement of the type `expr;'
     SimpleStatement(Expr),
+    /// A block of {statement}
+    CompoundStatement(Vec<Box<Statement>>)
+    // TODO 'if statement'
+    // TODO 'loop statement'
 }
 
 /// An expression is something that evaluates to something
@@ -23,7 +27,7 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn eval(&self, buf: &mut HashMap<String, i64>) -> Result<i64, ParserError> {
+    pub fn eval(&self, buf: &mut HashMap<String, i64>) -> Result<i64, EvalError> {
         match self {
             ConstExpr(value) => Ok(*value),
             Expr::NegExpr(expr) => match expr.eval(buf) {
@@ -68,7 +72,7 @@ mod tests {
 
     fn assert_ast_eval(text: &str, expected: i64) {
         let tokens = tokenize(&text.to_string());
-        if let Some(ast) = parse_expression(&tokens.unwrap()) {
+        if let Ok(ast) = parse_expression(&tokens.unwrap()) {
             match ast.eval(&mut HashMap::new()) {
                 Ok(value) => assert_eq!(value, expected),
                 Err(_) => assert!(false),

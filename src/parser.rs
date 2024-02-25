@@ -2,11 +2,13 @@ use crate::ast::Expr::{
     AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, NegExpr, ParenthesisExpr,
 };
 use crate::ast::{Expr, Statement};
+use crate::error::ParserError;
+use crate::error::ParserError::UnknownSyntax;
 use crate::token::{Op, Token};
 
 /// A struct to contain data related to parsing
 ///
-/// Top Down Parser
+/// Top-Down Parser
 pub struct Parser<'a> {
     tokens: &'a Vec<Token>,
     index: usize,
@@ -20,19 +22,24 @@ impl<'a> Parser<'a> {
 
     /// An expression is something that is evaluated to something.
     /// (unlike statements that evaluates to nothing)
-    pub fn parse_expression(&mut self) -> Option<Expr> {
+    pub fn parse_expression(&mut self) -> Result<Expr, ParserError> {
         if let Some(assign) = self.parse_assignment_expr() {
-            return Some(assign);
+            return Ok(assign);
         } else if let Some(tmp) = self.parse_additive_expr() {
-            return Some(tmp);
+            return Ok(tmp);
         }
-        None
+        Err(UnknownSyntax)
     }
 
     pub fn parse_statements(&mut self) -> Vec<Statement> {
         let mut statements = vec![];
         self.parse_one_statement(&mut statements);
         statements
+    }
+
+    fn is_finished(&self) -> bool {
+        println!("{}, {}", self.index, self.tokens.len());
+        self.index == self.tokens.len()
     }
 }
 
@@ -54,7 +61,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_one_statement(&mut self, fill_in: &mut Vec<Statement>) {
-        if let Some(expr) = self.parse_expression() {
+        if let Ok(expr) = self.parse_expression() {
             if let Some(Token::SemiColon) = self.peek() {
                 self.index += 1;
                 fill_in.push(Statement::SimpleStatement(expr));
@@ -69,7 +76,7 @@ impl<'a> Parser<'a> {
         let checkpoint = self.index;
         if let Some(Token::Ident(name)) = self.consume() {
             if let Some(Token::Equal) = self.consume() {
-                if let Some(expr) = self.parse_expression() {
+                if let Ok(expr) = self.parse_expression() {
                     return Some(AssignmentExpr(name.clone(), Box::new(expr)));
                 }
             }
@@ -128,7 +135,7 @@ impl<'a> Parser<'a> {
         // Parenthesis
         let checkpoint = self.index;
         if let Some(Token::LPar) = self.consume() {
-            if let Some(expr) = self.parse_expression() {
+            if let Ok(expr) = self.parse_expression() {
                 if let Some(Token::RPar) = self.consume() {
                     return Some(ParenthesisExpr(Box::new(expr)));
                 }
@@ -146,9 +153,20 @@ impl<'a> Parser<'a> {
     }
 }
 
-pub fn parse_expression(tokens: &Vec<Token>) -> Option<Expr> {
+pub fn parse_expression(tokens: &Vec<Token>) -> Result<Expr, ParserError> {
     let mut parser = Parser::new(tokens);
-    parser.parse_expression()
+    match parser.parse_expression() {
+        Ok(ast) => {
+            if parser.is_finished() {
+                Ok(ast)
+            } else {
+                Err(ParserError::TokensNotParsed)
+            }
+        }
+        Err(err) => {
+            Err(err)
+        }
+    }
 }
 
 pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
@@ -166,7 +184,7 @@ mod tests {
     fn assert_ast(text: &str, expected: Expr) {
         let tokens = tokenize(&text.to_string());
         print!("Building AST for <input> = <{text}>:   ");
-        if let Some(ast) = parse_expression(&tokens.unwrap()) {
+        if let Ok(ast) = parse_expression(&tokens.unwrap()) {
             assert_eq!(ast, expected);
         } else {
             assert!(false);
@@ -176,7 +194,7 @@ mod tests {
     fn assert_ast_with_text(text: &str, expected: &str) {
         let tokens = tokenize(&text.to_string());
         print!("Building AST for <input> = <{text}>:   ");
-        if let Some(ast) = parse_expression(&tokens.unwrap()) {
+        if let Ok(ast) = parse_expression(&tokens.unwrap()) {
             assert_eq!(format!("{ast:?}"), expected);
         } else {
             assert!(false);

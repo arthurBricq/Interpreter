@@ -3,7 +3,7 @@ use std::io::{stdin, stdout, Write};
 use colored::Colorize;
 
 use crate::ast::Expr;
-use crate::error::ParserError;
+use crate::error::{EvalError, ParserError};
 use crate::parser::parse_expression;
 use crate::token::tokenize;
 
@@ -42,21 +42,22 @@ impl Shell {
         }
     }
 
-    fn eval(&mut self, ast: &Expr) -> Result<i64, ParserError> {
+    fn eval(&mut self, ast: &Expr) -> Result<i64, EvalError> {
         ast.eval(&mut self.vars)
     }
 
     fn interpret(&mut self, text: &String) {
         match tokenize(text) {
             Ok(tokens) => {
-                if let Some(ast) = parse_expression(&tokens) {
-                    println!("{}", "{ast:?}".italic().green());
-                    match self.eval(&ast) {
-                        Ok(value) => println!("{value:?}"),
-                        Err(e) => println!("{} {e:?}", "Error while evaluating: ".red()),
+                match parse_expression(&tokens) {
+                    Ok(ast) => {
+                        println!("{}", format!("{ast:?}").italic().green());
+                        match self.eval(&ast) {
+                            Ok(value) => println!("{value:?}"),
+                            Err(e) => println!("{} {e:?}", "Error while evaluating: ".red()),
+                        }
                     }
-                } else {
-                    println!("{}", "Parsing Error".red())
+                    Err(e) => println!("{} {e:?}", "Error while parsing: ".red()),
                 }
             }
             Err(err) => println!("{} {err:?}", "Error while tokenizing: ".red())
