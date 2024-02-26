@@ -50,15 +50,21 @@ MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), Unknow
 
 - new operators: 
     - ** for power
-    - MOD
+    - % for modulo
     
-**Next milestone** : Support float and integers
+**Next milestone** : Support float, integers, bool and string
 
-**Next milestone** : a file reader with indentation and scope
+- [ ] integer
+- [ ] float
+- [ ] bool
+- [ ] string
 
 **Next milestone**: functions 
 
-- multi-line parsing: introduce statements
+- [x] multi-line parsing: introduce statements
+- [ ] parse functions
+  - token `fn`
+  - 
 
-**Next milestone**: web-assembly deployment
+**Next milestone**: web-assembly deployment of the shell
 
