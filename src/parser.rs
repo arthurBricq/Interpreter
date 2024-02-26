@@ -24,11 +24,22 @@ impl<'a> Parser<'a> {
     /// (unlike statements that evaluates to nothing)
     pub fn parse_expression(&mut self) -> Result<Expr, ParserError> {
         if let Some(assign) = self.parse_assignment_expr() {
-            return Ok(assign);
+            // if self.is_finished() {
+            //     Ok(assign)
+            // } else {
+            //     Err(ParserError::TokensNotParsed)
+            // }
+            Ok(assign)
         } else if let Some(tmp) = self.parse_additive_expr() {
-            return Ok(tmp);
+            // if self.is_finished() {
+            //     Ok(tmp)
+            // } else {
+            //     Err(ParserError::TokensNotParsed)
+            // }
+            Ok(tmp)
+        } else {
+            Err(UnknownSyntax)
         }
-        Err(UnknownSyntax)
     }
 
     pub fn parse_statements(&mut self) -> Vec<Statement> {
@@ -153,6 +164,7 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Parse a single expression
 pub fn parse_expression(tokens: &Vec<Token>) -> Result<Expr, ParserError> {
     let mut parser = Parser::new(tokens);
     match parser.parse_expression() {
@@ -169,6 +181,7 @@ pub fn parse_expression(tokens: &Vec<Token>) -> Result<Expr, ParserError> {
     }
 }
 
+/// Parse a list of statements
 pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
     let mut parser = Parser::new(tokens);
     parser.parse_statements()
@@ -178,6 +191,7 @@ pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
 mod tests {
     use crate::ast::Expr::{BinaryExpr, ConstExpr};
     use crate::ast::*;
+    use crate::error::ParserError;
     use crate::parser::{parse_expression, parse_statements};
     use crate::token::*;
 
@@ -194,11 +208,21 @@ mod tests {
     fn assert_ast_with_text(text: &str, expected: &str) {
         let tokens = tokenize(&text.to_string());
         print!("Building AST for <input> = <{text}>:   ");
-        if let Ok(ast) = parse_expression(&tokens.unwrap()) {
-            assert_eq!(format!("{ast:?}"), expected);
-        } else {
-            assert!(false);
+        match parse_expression(&tokens.unwrap()) {
+            Ok(ast) => { assert_eq!(format!("{ast:?}"), expected); }
+            Err(err) => {
+                println!("err={err:?}");
+                assert!(false);
+            }
         }
+    }
+
+    #[test]
+    fn test_parse_simple_parenthesis() {
+        assert_ast_with_text(
+            "(1)",
+            "ParenthesisExpr(ConstExpr(1))",
+        );
     }
 
     #[test]
