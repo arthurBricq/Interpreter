@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Constant, Equal, Ident, LPar, RPar, SemiColon, TokenOp};
+use crate::token::Token::{Constant, Equal, Ident, LBracket, LPar, RBracket, RPar, SemiColon, TokenOp};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -14,8 +14,8 @@ pub enum Op {
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Token {
     TokenOp(Op),
-    LPar,
-    RPar,
+    LPar, RPar,
+    LBracket, RBracket,
     Ident(String),
     Constant(i64),
     SemiColon,
@@ -72,6 +72,8 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             '*' => tokens.push(TokenOp(Times)),
             '(' => tokens.push(LPar),
             ')' => tokens.push(RPar),
+            '{' => tokens.push(LBracket),
+            '}' => tokens.push(RBracket),
             '=' => tokens.push(Equal),
             ';' => tokens.push(SemiColon),
             ' ' | '\r' | '\t' | '\n' => {}
@@ -91,7 +93,7 @@ mod tests {
     use crate::token::Op::{Div, Minus, Plus, Times};
     use crate::token::{tokenize, Token};
 
-    use crate::token::Token::{Constant, Equal, Ident, LPar, RPar, SemiColon, TokenOp};
+    use crate::token::Token::{Constant, Equal, Ident, LBracket, LPar, RBracket, RPar, SemiColon, TokenOp};
 
     fn assert_tokens(text: &str, tokens: Vec<Token>) {
         let computed = tokenize(&text.to_string()).unwrap();
@@ -137,6 +139,10 @@ mod tests {
         assert_tokens(
             "1+1;",
             vec![Constant(1), TokenOp(Plus), Constant(1), SemiColon],
+        );
+        assert_tokens(
+            "{1+1;}",
+            vec![LBracket, Constant(1), TokenOp(Plus), Constant(1), SemiColon, RBracket],
         );
     }
 }

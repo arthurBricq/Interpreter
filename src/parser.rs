@@ -1,7 +1,9 @@
+use std::iter::once_with;
 use crate::ast::Expr::{
     AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, NegExpr, ParenthesisExpr,
 };
 use crate::ast::{Expr, Statement};
+use crate::ast::Statement::CompoundStatement;
 use crate::error::ParserError;
 use crate::error::ParserError::UnknownSyntax;
 use crate::token::{Op, Token};
@@ -24,18 +26,8 @@ impl<'a> Parser<'a> {
     /// (unlike statements that evaluates to nothing)
     pub fn parse_expression(&mut self) -> Result<Expr, ParserError> {
         if let Some(assign) = self.parse_assignment_expr() {
-            // if self.is_finished() {
-            //     Ok(assign)
-            // } else {
-            //     Err(ParserError::TokensNotParsed)
-            // }
             Ok(assign)
         } else if let Some(tmp) = self.parse_additive_expr() {
-            // if self.is_finished() {
-            //     Ok(tmp)
-            // } else {
-            //     Err(ParserError::TokensNotParsed)
-            // }
             Ok(tmp)
         } else {
             Err(UnknownSyntax)
@@ -44,13 +36,10 @@ impl<'a> Parser<'a> {
 
     pub fn parse_statements(&mut self) -> Vec<Statement> {
         let mut statements = vec![];
-        self.parse_one_statement(&mut statements);
+        while let Some(stm) = self.parse_one_statement() {
+            statements.push(stm);
+        }
         statements
-    }
-
-    fn is_finished(&self) -> bool {
-        println!("{}, {}", self.index, self.tokens.len());
-        self.index == self.tokens.len()
     }
 }
 
@@ -58,6 +47,11 @@ impl<'a> Parser<'a> {
     /// Inspect current token
     fn peek(&self) -> Option<Token> {
         self.tokens.get(self.index).map(|x| x.clone())
+    }
+
+    fn is_finished(&self) -> bool {
+        println!("{}, {}", self.index, self.tokens.len());
+        self.index == self.tokens.len()
     }
 
     /// Inspects current token and go forward
@@ -71,15 +65,33 @@ impl<'a> Parser<'a> {
         self.index = index;
     }
 
-    fn parse_one_statement(&mut self, fill_in: &mut Vec<Statement>) {
+    fn parse_one_statement(&mut self) -> Option<Statement> {
         if let Ok(expr) = self.parse_expression() {
             if let Some(Token::SemiColon) = self.peek() {
                 self.index += 1;
-                fill_in.push(Statement::SimpleStatement(expr));
-                // Potentially, there are many statements
-                self.parse_one_statement(fill_in);
+                return Some(Statement::SimpleStatement(expr))
             }
         }
+        None
+    }
+
+    fn parse_compound_statement(&mut self) -> Option<Statement> {
+        let checkpoint = self.index;
+        if let Some(Token::LBracket) = self.peek() {
+            self.index += 1;
+            let mut statements = vec![];
+            while let Some(stm) = self.parse_one_statement() {
+                statements.push(Box::new(stm));
+            }
+            // Once there are no more statement being parsed, try to parse
+            // a closing parenthesis.
+            if let Some(Token::RBracket) = self.peek() {
+                self.index += 1;
+                return Some(CompoundStatement(statements))
+            }
+        }
+        self.set_index(checkpoint);
+        None
     }
 
     /// Matches "Ident = Something"
@@ -189,10 +201,10 @@ pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::Expr::{BinaryExpr, ConstExpr};
+    use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr};
     use crate::ast::*;
     use crate::error::ParserError;
-    use crate::parser::{parse_expression, parse_statements};
+    use crate::parser::{parse_expression, parse_statements, Parser};
     use crate::token::*;
 
     fn assert_ast(text: &str, expected: Expr) {
@@ -285,5 +297,22 @@ mod tests {
         let statements = parse_statements(&tokens.unwrap());
         assert_eq!(3, statements.len());
         println!("{statements:#?}");
+    }
+
+    #[test]
+    fn test_parse_coumpond_statements() {
+        let text = "{a=1;b=1;c=a+b;a+b;}".to_string();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        if let Some(Statement::CompoundStatement(statements)) = parser.parse_compound_statement() {
+            println!("result = {statements:?}");
+            assert_eq!(statements.len(), 4);
+            assert!(matches!(statements[0].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[1].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[2].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[3].as_ref(), Statement::SimpleStatement(BinaryExpr(_,Op::Plus, _))));
+        } else {
+            println!("failed");
+        }
     }
 }
