@@ -64,7 +64,7 @@ MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), Unknow
 - [x] multi-line parsing: introduce statements
 - [ ] parse functions
   - token `fn`
-  - 
+  - return statement
 
 **Next milestone**: web-assembly deployment of the shell
 

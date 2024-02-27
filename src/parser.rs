@@ -66,6 +66,15 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_one_statement(&mut self) -> Option<Statement> {
+        if let Some(Token::Return) = self.peek() {
+            self.index += 1;
+            if let Ok(expr) = self.parse_expression() {
+                return Some(Statement::Return(expr))
+            }
+            // TODO error handling
+            return None
+        }
+
         if let Ok(expr) = self.parse_expression() {
             if let Some(Token::SemiColon) = self.peek() {
                 self.index += 1;
@@ -81,6 +90,7 @@ impl<'a> Parser<'a> {
             self.index += 1;
             let mut statements = vec![];
             while let Some(stm) = self.parse_one_statement() {
+                println!("One statement parsed: {stm:?}");
                 statements.push(Box::new(stm));
             }
             // Once there are no more statement being parsed, try to parse
@@ -313,6 +323,24 @@ mod tests {
             assert!(matches!(statements[3].as_ref(), Statement::SimpleStatement(BinaryExpr(_,Op::Plus, _))));
         } else {
             println!("failed");
+            assert!(false);
+        }
+    }
+    #[test]
+    fn test_parse_compound_with_return_statements() {
+        let text = "{a=1; b=1; return a + b}".to_string();
+        let tokens = tokenize(&text).unwrap();
+        println!("{tokens:?}");
+        let mut parser = Parser::new(&tokens);
+        if let Some(Statement::CompoundStatement(statements)) = parser.parse_compound_statement() {
+            println!("result = {statements:?}");
+            assert_eq!(statements.len(), 3);
+            assert!(matches!(statements[0].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[1].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[2].as_ref(), Statement::Return(_)));
+        } else {
+            println!("failed");
+            assert!(false);
         }
     }
 }

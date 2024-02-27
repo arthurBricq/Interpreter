@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Constant, Equal, Ident, LBracket, LPar, RBracket, RPar, SemiColon, TokenOp};
+use crate::token::Token::{Constant, Equal, Ident, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -17,6 +17,7 @@ pub enum Token {
     LPar, RPar,
     LBracket, RBracket,
     Ident(String),
+    Return,
     Constant(i64),
     SemiColon,
     Equal,
@@ -49,7 +50,7 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             continue;
         }
 
-        // Parse an ident
+        // Parse an word
         if ch.unwrap().is_alphabetic() {
             let mut tmp: String = ch.unwrap().to_string();
             ch = chars.next();
@@ -61,7 +62,10 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
                     break;
                 }
             }
-            tokens.push(Ident(tmp));
+            tokens.push(match tmp.as_str() {
+                "return" => Return,
+                &_ => Ident(tmp)
+            });
             continue;
         }
 
@@ -93,7 +97,7 @@ mod tests {
     use crate::token::Op::{Div, Minus, Plus, Times};
     use crate::token::{tokenize, Token};
 
-    use crate::token::Token::{Constant, Equal, Ident, LBracket, LPar, RBracket, RPar, SemiColon, TokenOp};
+    use crate::token::Token::{Constant, Equal, Ident, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
 
     fn assert_tokens(text: &str, tokens: Vec<Token>) {
         let computed = tokenize(&text.to_string()).unwrap();
@@ -144,5 +148,10 @@ mod tests {
             "{1+1;}",
             vec![LBracket, Constant(1), TokenOp(Plus), Constant(1), SemiColon, RBracket],
         );
+        assert_tokens(
+            "return 1;",
+            vec![Return, Constant(1), SemiColon],
+        );
+
     }
 }
