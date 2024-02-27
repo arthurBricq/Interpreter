@@ -248,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ast() {
+    fn test_basic_ast_expressions() {
         assert_ast(
             "1 + 2",
             BinaryExpr(Box::new(ConstExpr(1)), Op::Plus, Box::new(ConstExpr(2))),

@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Constant, Equal, Ident, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
+use crate::token::Token::{Constant, Equal, Fn, Ident, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -17,10 +17,12 @@ pub enum Token {
     LPar, RPar,
     LBracket, RBracket,
     Ident(String),
-    Return,
     Constant(i64),
     SemiColon,
     Equal,
+    /// Keywords
+    Return,
+    Fn
 }
 
 pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
@@ -64,6 +66,7 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             }
             tokens.push(match tmp.as_str() {
                 "return" => Return,
+                "fn" => Fn,
                 &_ => Ident(tmp)
             });
             continue;

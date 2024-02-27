@@ -12,7 +12,7 @@ pub enum Statement {
     /// A block of {statement}
     CompoundStatement(Vec<Box<Statement>>),
     /// A return statement, for functions
-    Return(Expr)
+    Return(Expr),
     // TODO 'if statement'
     // TODO 'loop statement'
 }
