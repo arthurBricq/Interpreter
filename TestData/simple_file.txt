@@ -1,0 +1,12 @@
+fn foo(first, second) {
+    a = first + second;
+    return a + 1
+}
+
+fn bar() {
+    return 3;
+}
+
+fn main() {
+    
+}

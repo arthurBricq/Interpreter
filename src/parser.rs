@@ -7,6 +7,7 @@ use crate::ast::Declaration::Function;
 use crate::ast::Statement::CompoundStatement;
 use crate::error::ParserError;
 use crate::error::ParserError::{ExpectedDifferentToken, UnknownSyntax, WrongFunctionArgumentList, WrongFunctionBody};
+use crate::module::Module;
 use crate::token::{Op, Token};
 
 /// A struct to contain data related to parsing
@@ -64,6 +65,19 @@ impl<'a> Parser<'a> {
 
     fn set_index(&mut self, index: usize) {
         self.index = index;
+    }
+
+    fn parse_module(&mut self) -> Module {
+        let mut declarations = vec![];
+        while let Ok(Some(ast)) = self.parse_declaration() {
+            declarations.push(ast);
+        }
+        Module::new(declarations)
+    }
+
+    /// Parse any kind of declaration
+    fn parse_declaration(&mut self) -> Result<Option<Declaration>, ParserError> {
+        self.parse_one_function()
     }
 
     /// Try to parse a function declaration
@@ -447,5 +461,19 @@ fn my_func_name(first, second) {
             }
         }
         println!("{tokens:?}");
+    }
+    
+    fn get_simple_file() -> String {
+        std::fs::read_to_string("TestData/simple_file.txt").unwrap()
+    }
+
+    #[test]
+    fn test_parse_file() {
+        let text = get_simple_file();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let file = parser.parse_module();
+        file.debug();
+        assert_eq!(3, file.number_of_functions());
     }
 }
