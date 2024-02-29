@@ -2,10 +2,11 @@ use std::iter::once_with;
 use crate::ast::Expr::{
     AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, NegExpr, ParenthesisExpr,
 };
-use crate::ast::{Expr, Statement};
+use crate::ast::{Declaration, Expr, FnArg, Statement};
+use crate::ast::Declaration::Function;
 use crate::ast::Statement::CompoundStatement;
 use crate::error::ParserError;
-use crate::error::ParserError::UnknownSyntax;
+use crate::error::ParserError::{ExpectedDifferentToken, UnknownSyntax, WrongFunctionArgumentList, WrongFunctionBody};
 use crate::token::{Op, Token};
 
 /// A struct to contain data related to parsing
@@ -65,25 +66,78 @@ impl<'a> Parser<'a> {
         self.index = index;
     }
 
+    /// Try to parse a function declaration
+    fn parse_one_function(&mut self) -> Result<Option<Declaration>, ParserError> {
+        if let Some(Token::Fn) = self.peek() {
+            self.index += 1;
+            if let Some(Token::Ident(name)) = self.peek() {
+                self.index += 1;
+                // Parse the list of arguments
+                match self.parse_function_argument_list() {
+                    Ok(arguments) => {
+                        // Parse the body of the function
+                        if let Some(body) = self.parse_compound_statement() {
+                            return Ok(Some(Function(name, arguments, body)))
+                        } else {
+                            return Err(WrongFunctionBody)
+                        }
+                    }
+                    Err(e) => return Err(e)
+                }
+            } else {
+                return Err(ExpectedDifferentToken("Expecting an indent after function declaration"));
+            }
+        }
+        Ok(None)
+    }
+
+    /// Try to parse the list of arguments in a function declaration
+    fn parse_function_argument_list(&mut self) -> Result<Vec<FnArg>, ParserError> {
+        if let Some(Token::LPar) = self.peek() {
+            self.index += 1;
+            let mut to_return = vec![];
+            while let Some(Token::Ident(name)) = self.peek() {
+                self.index += 1;
+                to_return.push(FnArg(name));
+                match self.peek() {
+                    Some(Token::RPar) => {
+                        self.index += 1;
+                        return Ok(to_return);
+                    }
+                    Some(Token::Comma) => {
+                        self.index += 1;
+                    }
+                    _ => {
+                        return Err(WrongFunctionArgumentList);
+                    }
+                }
+            }
+            Ok(to_return)
+        } else {
+            Err(ExpectedDifferentToken("Expecting left par after function name"))
+        }
+    }
+
     fn parse_one_statement(&mut self) -> Option<Statement> {
         if let Some(Token::Return) = self.peek() {
             self.index += 1;
             if let Ok(expr) = self.parse_expression() {
-                return Some(Statement::Return(expr))
+                return Some(Statement::Return(expr));
             }
             // TODO error handling
-            return None
+            return None;
         }
 
         if let Ok(expr) = self.parse_expression() {
             if let Some(Token::SemiColon) = self.peek() {
                 self.index += 1;
-                return Some(Statement::SimpleStatement(expr))
+                return Some(Statement::SimpleStatement(expr));
             }
         }
         None
     }
 
+    /// Parse all the statements included inside a { block }
     fn parse_compound_statement(&mut self) -> Option<Statement> {
         let checkpoint = self.index;
         if let Some(Token::LBracket) = self.peek() {
@@ -97,7 +151,7 @@ impl<'a> Parser<'a> {
             // a closing parenthesis.
             if let Some(Token::RBracket) = self.peek() {
                 self.index += 1;
-                return Some(CompoundStatement(statements))
+                return Some(CompoundStatement(statements));
             }
         }
         self.set_index(checkpoint);
@@ -326,6 +380,29 @@ mod tests {
             assert!(false);
         }
     }
+
+    #[test]
+    fn test_parse_coumpond_statements_new_line() {
+        let text = "{a=1;\
+        b=1;\
+        c=a+b;\
+        a+b;\
+}".to_string();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        if let Some(Statement::CompoundStatement(statements)) = parser.parse_compound_statement() {
+            println!("result = {statements:?}");
+            assert_eq!(statements.len(), 4);
+            assert!(matches!(statements[0].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[1].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[2].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[3].as_ref(), Statement::SimpleStatement(BinaryExpr(_,Op::Plus, _))));
+        } else {
+            println!("failed");
+            assert!(false);
+        }
+    }
+
     #[test]
     fn test_parse_compound_with_return_statements() {
         let text = "{a=1; b=1; return a + b}".to_string();
@@ -342,5 +419,33 @@ mod tests {
             println!("failed");
             assert!(false);
         }
+    }
+
+    #[test]
+    fn test_parse_function() {
+        let text = "\
+fn my_func_name(first, second) {
+    a = first + second;
+    return a + 1
+}".to_string();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        match parser.parse_one_function() {
+            Ok(Some(Declaration::Function(name, args, body))) => {
+                println!("{name:?}");
+                println!("{args:?}");
+                println!("{body:?}");
+                assert_eq!(name, "my_func_name".to_string());
+                assert_eq!(args.len(), 2);
+                assert_eq!(args[0].0, "first".to_string());
+                assert_eq!(args[1].0, "second".to_string());
+            }
+            Ok(None) => assert!(false),
+            Err(e) => {
+                println!("Error = {e:?}");
+                assert!(false);
+            }
+        }
+        println!("{tokens:?}");
     }
 }

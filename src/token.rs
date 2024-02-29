@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Constant, Equal, Fn, Ident, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
+use crate::token::Token::{Comma, Constant, Equal, Fn, Ident, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -14,15 +14,17 @@ pub enum Op {
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Token {
     TokenOp(Op),
-    LPar, RPar,
-    LBracket, RBracket,
     Ident(String),
     Constant(i64),
-    SemiColon,
     Equal,
+    /// Symbols
+    LPar, RPar,
+    LBracket, RBracket,
+    SemiColon,
+    Comma,
     /// Keywords
     Return,
-    Fn
+    Fn,
 }
 
 pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
@@ -53,11 +55,11 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
         }
 
         // Parse an word
-        if ch.unwrap().is_alphabetic() {
+        if ch.unwrap().is_alphabetic() || ch.unwrap() == '_' {
             let mut tmp: String = ch.unwrap().to_string();
             ch = chars.next();
             while let Some(next_ch) = ch {
-                if next_ch.is_alphanumeric() {
+                if next_ch.is_alphanumeric() || ch.unwrap() == '_' {
                     tmp.push(next_ch);
                     ch = chars.next();
                 } else {
@@ -83,6 +85,7 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             '}' => tokens.push(RBracket),
             '=' => tokens.push(Equal),
             ';' => tokens.push(SemiColon),
+            ',' => tokens.push(Comma),
             ' ' | '\r' | '\t' | '\n' => {}
             _ => {
                 return Err(UnknownChar(ch.unwrap()))

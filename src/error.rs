@@ -15,5 +15,8 @@ pub enum ParserError {
     /// The parser did not find any match
     UnknownSyntax,
     /// When a token is remaining after parsing is finished.
-    TokensNotParsed
+    TokensNotParsed, 
+    ExpectedDifferentToken(&'static str),
+    WrongFunctionArgumentList,
+    WrongFunctionBody,
 }
