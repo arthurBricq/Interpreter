@@ -1,6 +1,6 @@
 fn add(first, second) {
     a = first + second;
-    return a + 1
+    return a
 }
 
 fn bar() {

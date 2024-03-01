@@ -16,7 +16,9 @@ impl Module {
 
     /// Returns a function by its name
     pub fn get_function(&self, name: String) -> Option<&Declaration> {
-        self.declarations.iter().find(|d| matches!(d, Declaration::Function(name, _, _)))
+        self.declarations.iter().find(|d| match d {
+            Declaration::Function(fname, _, _) => *fname == name
+        })
     }
 
     pub fn debug(&self) {
