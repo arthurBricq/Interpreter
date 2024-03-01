@@ -1,10 +1,9 @@
-use std::iter::once_with;
-use crate::ast::Expr::{
-    AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, NegExpr, ParenthesisExpr,
-};
-use crate::ast::{Declaration, Expr, FnArg, Statement};
-use crate::ast::Declaration::Function;
-use crate::ast::Statement::CompoundStatement;
+use crate::ast::declaration::{Declaration, FnArg};
+use crate::ast::declaration::Declaration::Function;
+use crate::ast::expression::Expr;
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, NegExpr, ParenthesisExpr};
+use crate::ast::statement::Statement;
+use crate::ast::statement::Statement::CompoundStatement;
 use crate::error::ParserError;
 use crate::error::ParserError::{ExpectedDifferentToken, UnknownSyntax, WrongFunctionArgumentList, WrongFunctionBody};
 use crate::module::Module;
@@ -283,9 +282,10 @@ pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::Expr::{AssignmentExpr, BinaryExpr, ConstExpr};
-    use crate::ast::*;
-    use crate::error::ParserError;
+    use crate::ast::declaration::Declaration;
+    use crate::ast::expression::Expr;
+    use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr};
+    use crate::ast::statement::Statement;
     use crate::parser::{parse_expression, parse_statements, Parser};
     use crate::token::*;
 

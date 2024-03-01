@@ -1,4 +1,4 @@
-fn foo(first, second) {
+fn add(first, second) {
     a = first + second;
     return a + 1
 }
@@ -7,6 +7,15 @@ fn bar() {
     return 3
 }
 
+fn foo() {
+    return 5
+}
+
 fn main() {
-    
+    a = bar();
+    b = foo();
+    c = add(a, b); 
+    d = add(bar(), bar()); 
+    print(c);
+    print(d);
 }

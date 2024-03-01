@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::io::{stdin, stdout, Write};
 use colored::Colorize;
 
-use crate::ast::Expr;
+use crate::ast::expression::*;
 use crate::error::{EvalError, ParserError};
 use crate::parser::parse_expression;
 use crate::token::tokenize;

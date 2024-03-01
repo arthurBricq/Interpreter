@@ -1,4 +1,4 @@
-use crate::ast::Declaration;
+use crate::ast::declaration::Declaration;
 
 #[derive(Debug)]
 pub struct Module {
