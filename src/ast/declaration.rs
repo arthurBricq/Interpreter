@@ -19,12 +19,24 @@ impl Declaration {
         match self {
             Declaration::Function(_name, args, body) => {
                 // Is it normal that I don't use any of the args?
-                
-                
-                
             }
         }
         
         Err(NotImplemented)
+    }
+}
+#[cfg(test)]
+mod tests {
+    use crate::parser::Parser;
+    use crate::token::tokenize;
+
+    #[test]
+    fn test_eval_function() {
+        let text = crate::parser::tests::get_simple_file();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let file = parser.parse_module();
+        file.debug();
+        assert_eq!(3, file.number_of_functions());
     }
 }

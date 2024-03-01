@@ -42,6 +42,14 @@ impl<'a> Parser<'a> {
         }
         statements
     }
+
+    pub fn parse_module(&mut self) -> Module {
+        let mut declarations = vec![];
+        while let Ok(Some(ast)) = self.parse_declaration() {
+            declarations.push(ast);
+        }
+        Module::new(declarations)
+    }
 }
 
 impl<'a> Parser<'a> {
@@ -66,13 +74,6 @@ impl<'a> Parser<'a> {
         self.index = index;
     }
 
-    fn parse_module(&mut self) -> Module {
-        let mut declarations = vec![];
-        while let Ok(Some(ast)) = self.parse_declaration() {
-            declarations.push(ast);
-        }
-        Module::new(declarations)
-    }
 
     /// Parse any kind of declaration
     fn parse_declaration(&mut self) -> Result<Option<Declaration>, ParserError> {
@@ -282,7 +283,7 @@ pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use crate::ast::declaration::Declaration;
     use crate::ast::expression::Expr;
     use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr};
@@ -493,7 +494,7 @@ fn my_func_name() {
         println!("{tokens:?}");
     }
     
-    fn get_simple_file() -> String {
+    pub(crate) fn get_simple_file() -> String {
         std::fs::read_to_string("TestData/simple_file.txt").unwrap()
     }
 
