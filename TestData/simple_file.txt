@@ -1,10 +1,14 @@
 fn add(first, second) {
     a = first + second;
-    return a
+    return a;
+}
+
+fn passthrough(a) {
+    return a;
 }
 
 fn bar() {
-    return 3
+    return 3;
 }
 
 fn foo() {
@@ -15,7 +19,7 @@ fn main() {
     a = bar();
     b = foo();
     c = add(a, b); 
-    d = add(bar(), bar()); 
     print(c);
+    d = add(bar(), passthrough(foo())); 
     print(d);
 }

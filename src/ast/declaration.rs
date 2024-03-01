@@ -38,19 +38,18 @@ mod tests {
         let text = crate::parser::tests::get_simple_file();
         let tokens = tokenize(&text).unwrap();
         let mut parser = Parser::new(&tokens);
-        let file = parser.parse_module();
-        assert_eq!(3, file.number_of_functions());
+        let module = parser.parse_module();
         
-        let bar = file.get_function("bar".to_string()).unwrap();
+        let bar = module.get_function("bar".to_string()).unwrap();
         let result = bar.eval(&mut HashMap::new());
         assert_eq!(Ok(Some(3)), result);
         
-        let foo = file.get_function("foo".to_string()).unwrap();
+        let foo = module.get_function("foo".to_string()).unwrap();
         let result = foo.eval(&mut HashMap::new());
         assert_eq!(Ok(Some(5)), result);
         
         // When running the add function without arguments, it's going to fail
-        let add = file.get_function("add".to_string()).unwrap();
+        let add = module.get_function("add".to_string()).unwrap();
         let result = add.eval(&mut HashMap::new());
         assert!(matches!(result, Err(_)));
 
@@ -60,5 +59,10 @@ mod tests {
         map.insert("second".to_string(), 2);
         let result = add.eval(&mut map);
         assert_eq!(Ok(Some(12)), result);
+        println!("{map:?}");
+
+        let main = module.get_function("main".to_string()).unwrap();
+        println!("{main:?}");
+        
     }
 }

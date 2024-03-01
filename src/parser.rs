@@ -140,6 +140,9 @@ impl<'a> Parser<'a> {
         if let Some(Token::Return) = self.peek() {
             self.index += 1;
             if let Ok(expr) = self.parse_expression() {
+                if let Some(Token::SemiColon) = self.peek() {
+                    self.index += 1;
+                }
                 return Some(Statement::Return(expr));
             }
             // TODO error handling
@@ -267,6 +270,7 @@ pub fn parse_expression(tokens: &Vec<Token>) -> Result<Expr, ParserError> {
             if parser.is_finished() {
                 Ok(ast)
             } else {
+                println!("Current ast = {ast:?}");
                 Err(ParserError::TokensNotParsed)
             }
         }
@@ -305,7 +309,10 @@ pub(crate) mod tests {
         let tokens = tokenize(&text.to_string());
         print!("Building AST for <input> = <{text}>:   ");
         match parse_expression(&tokens.unwrap()) {
-            Ok(ast) => { assert_eq!(format!("{ast:?}"), expected); }
+            Ok(ast) => {
+                println!("{ast:?}");
+                assert_eq!(format!("{ast:?}"), expected); 
+            }
             Err(err) => {
                 println!("err={err:?}");
                 assert!(false);
@@ -505,6 +512,14 @@ fn my_func_name() {
         let mut parser = Parser::new(&tokens);
         let file = parser.parse_module();
         file.debug();
-        assert_eq!(3, file.number_of_functions());
+        assert_eq!(4, file.number_of_functions());
+    }
+    
+    #[test]
+    fn test_parse_function_call() {
+        assert_ast_with_text(
+            "test_func(1,2,3)",
+            "coucou",
+        );
     }
 }
