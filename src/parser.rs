@@ -144,12 +144,14 @@ impl<'a> Parser<'a> {
             // TODO error handling
             return None;
         }
-
         if let Ok(expr) = self.parse_expression() {
             if let Some(Token::SemiColon) = self.peek() {
                 self.index += 1;
                 return Some(Statement::SimpleStatement(expr));
             }
+        }
+        if let Some(compound) = self.parse_compound_statement() {
+            return Some(compound)
         }
         None
     }
@@ -161,7 +163,6 @@ impl<'a> Parser<'a> {
             self.index += 1;
             let mut statements = vec![];
             while let Some(stm) = self.parse_one_statement() {
-                println!("One statement parsed: {stm:?}");
                 statements.push(Box::new(stm));
             }
             // Once there are no more statement being parsed, try to parse

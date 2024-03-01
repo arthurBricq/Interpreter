@@ -1,6 +1,7 @@
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum EvalError {
+    NotImplemented,
     UnknownVariable(String),
     MultipleError(Vec<Box<EvalError>>),
 }
