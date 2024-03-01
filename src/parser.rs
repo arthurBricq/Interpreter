@@ -110,21 +110,25 @@ impl<'a> Parser<'a> {
         if let Some(Token::LPar) = self.peek() {
             self.index += 1;
             let mut to_return = vec![];
-            while let Some(Token::Ident(name)) = self.peek() {
-                self.index += 1;
-                to_return.push(FnArg(name));
-                match self.peek() {
-                    Some(Token::RPar) => {
+            while let Some(token) = self.peek() {
+                match token {
+                    Token::Ident(name) => {
+                        self.index += 1;
+                        to_return.push(FnArg(name));
+                    }
+                    Token::RPar => {
                         self.index += 1;
                         return Ok(to_return);
                     }
-                    Some(Token::Comma) => {
+                    Token::Comma => {
                         self.index += 1;
                     }
                     _ => {
-                        return Err(WrongFunctionArgumentList);
+                        return Err(WrongFunctionArgumentList)
                     }
                 }
+                
+
             }
             Ok(to_return)
         } else {
@@ -453,6 +457,31 @@ fn my_func_name(first, second) {
                 assert_eq!(args.len(), 2);
                 assert_eq!(args[0].0, "first".to_string());
                 assert_eq!(args[1].0, "second".to_string());
+            }
+            Ok(None) => assert!(false),
+            Err(e) => {
+                println!("Error = {e:?}");
+                assert!(false);
+            }
+        }
+        println!("{tokens:?}");
+    }
+
+    #[test]
+    fn test_parse_function_no_arguments() {
+        let text = "\
+fn my_func_name() {
+    return 1
+}".to_string();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        match parser.parse_one_function() {
+            Ok(Some(Declaration::Function(name, args, body))) => {
+                println!("{name:?}");
+                println!("{args:?}");
+                println!("{body:?}");
+                assert_eq!(name, "my_func_name".to_string());
+                assert_eq!(args.len(), 0);
             }
             Ok(None) => assert!(false),
             Err(e) => {
