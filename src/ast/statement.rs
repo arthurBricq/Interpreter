@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+
 use crate::ast::expression::Expr;
 use crate::error::EvalError;
 use crate::error::EvalError::NotImplemented;
@@ -49,10 +50,11 @@ impl Statement {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
-    use crate::error::{EvalError, ParserError};
+
+    use crate::error::EvalError;
     use crate::parser::Parser;
     use crate::token::tokenize;
-    
+
     fn assert_statement_eval(text: &str, expected: Result<Option<i64>, EvalError>) {
         let tokens = tokenize(&text.to_string()).unwrap();
         let mut parser = Parser::new(&tokens);

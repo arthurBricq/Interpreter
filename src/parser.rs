@@ -1,7 +1,7 @@
 use crate::ast::declaration::{Declaration, FnArg};
 use crate::ast::declaration::Declaration::Function;
 use crate::ast::expression::Expr;
-use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, NegExpr, ParenthesisExpr};
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
 use crate::ast::statement::Statement;
 use crate::ast::statement::Statement::CompoundStatement;
 use crate::error::ParserError;
@@ -28,6 +28,8 @@ impl<'a> Parser<'a> {
     pub fn parse_expression(&mut self) -> Result<Expr, ParserError> {
         if let Some(assign) = self.parse_assignment_expr() {
             Ok(assign)
+        } else if let Some(tmp) = self.parse_function_call_expr() {
+            Ok(tmp)
         } else if let Some(tmp) = self.parse_additive_expr() {
             Ok(tmp)
         } else {
@@ -127,13 +129,32 @@ impl<'a> Parser<'a> {
                         return Err(WrongFunctionArgumentList)
                     }
                 }
-                
-
             }
             Ok(to_return)
         } else {
             Err(ExpectedDifferentToken("Expecting left par after function name"))
         }
+    }
+
+    /// Try to parse the list of arguments in a function call
+    fn parse_function_call_argument_list(&mut self) -> Option<Vec<Box<Expr>>> {
+        if let Some(Token::LPar) = self.peek() {
+            self.index += 1;
+            let mut to_return = vec![];
+            while let Ok(expr) = self.parse_expression() {
+                to_return.push(Box::new(expr));
+                match self.peek() {
+                    None => {}
+                    Some(Token::Comma) => self.index += 1,
+                    Some(Token::RPar) => {
+                        self.index += 1;
+                        return Some(to_return);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        None
     }
 
     fn parse_one_statement(&mut self) -> Option<Statement> {
@@ -188,6 +209,19 @@ impl<'a> Parser<'a> {
                 if let Ok(expr) = self.parse_expression() {
                     return Some(AssignmentExpr(name.clone(), Box::new(expr)));
                 }
+            }
+        }
+        self.set_index(checkpoint);
+        None
+    }
+
+    fn parse_function_call_expr(&mut self) -> Option<Expr> {
+        let checkpoint = self.index;
+        if let Some(Token::Ident(name)) = self.peek() {
+            self.index += 1;
+            // Try to parse an argument list
+            if let Some(arguments) = self.parse_function_call_argument_list() {
+                return Some(FunctionCall(name, arguments))
             }
         }
         self.set_index(checkpoint);
@@ -519,7 +553,7 @@ fn my_func_name() {
     fn test_parse_function_call() {
         assert_ast_with_text(
             "test_func(1,2,3)",
-            "coucou",
+            "FunctionCall(\"test_func\", [ConstExpr(1), ConstExpr(2), ConstExpr(3)])",
         );
     }
 }

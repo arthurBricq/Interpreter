@@ -13,6 +13,7 @@ pub enum Expr {
     BinaryExpr(Box<Expr>, Op, Box<Expr>),
     AssignmentExpr(String, Box<Expr>),
     IdentExpr(String),
+    FunctionCall(String, Vec<Box<Expr>>),
 }
 
 impl Expr {
@@ -22,7 +23,7 @@ impl Expr {
             Expr::NegExpr(expr) => match expr.eval(buf) {
                 Ok(value) => Ok(-value),
                 Err(e) => Err(e),
-            },
+            }
             ParenthesisExpr(expr) => expr.eval(buf),
             BinaryExpr(l, op, r) => match (l.eval(buf), r.eval(buf)) {
                 (Ok(l), Ok(r)) => Ok(match op {
@@ -34,7 +35,7 @@ impl Expr {
                 (Err(r), Ok(_)) => Err(r),
                 (Ok(_), Err(err)) => Err(err),
                 (Err(err1), Err(err2)) => Err(MultipleError(vec![Box::new(err1), Box::new(err2)])),
-            },
+            }
             AssignmentExpr(name, value) => {
                 let eval = value.eval(buf);
                 match eval {
@@ -48,7 +49,10 @@ impl Expr {
             IdentExpr(name) => match buf.get(name) {
                 Some(value) => Ok(*value),
                 None => Err(UnknownVariable(name.clone())),
-            },
+            }
+            Expr::FunctionCall(name, args) => {
+                panic!("Function calls are not supported")
+            }
         }
     }
 }

@@ -60,9 +60,5 @@ mod tests {
         let result = add.eval(&mut map);
         assert_eq!(Ok(Some(12)), result);
         println!("{map:?}");
-
-        let main = module.get_function("main".to_string()).unwrap();
-        println!("{main:?}");
-        
     }
 }

@@ -5,7 +5,7 @@ pub mod declaration;
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
-    use crate::ast::*;
+
     use crate::parser::parse_expression;
     use crate::token::*;
 
