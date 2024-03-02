@@ -2,12 +2,14 @@ use std::collections::HashMap;
 
 use crate::ast::statement::Statement;
 use crate::error::EvalError;
+use crate::module::Module;
 
 /// A function argument currently only contains a string
 #[derive(Debug)]
 pub struct FnArg(pub String);
 
-/// A declaration is the top-level element of a file: list of declaration
+/// A declaration is the top-level element of a file.
+/// A file is list of declaration
 #[derive(Debug)]
 pub enum Declaration {
     /// A function = name + list of expression (arguments) + list of statement
@@ -16,11 +18,12 @@ pub enum Declaration {
 
 impl Declaration {
     /// Evaluate the output of the function based on the provided arguments
-    pub fn eval(&self, inputs: &mut HashMap<String, i64>) -> Result<Option<i64>, EvalError> {
+    pub fn eval(&self, inputs: &mut HashMap<String, i64>, module: Option<&Module>) -> Result<Option<i64>, EvalError> {
         match self {
             Declaration::Function(_name, _args, body) => {
                 // Is it normal that I don't use any of the args?
-                return body.eval(inputs);
+                // TODO use the proper module
+                return body.eval(inputs, module);
             }
         }
     }
@@ -33,30 +36,30 @@ mod tests {
     use crate::token::tokenize;
 
     #[test]
-    fn test_eval_function() {
+    fn test_dummy_eval_function() {
         let text = crate::parser::tests::get_simple_file();
         let tokens = tokenize(&text).unwrap();
         let mut parser = Parser::new(&tokens);
         let module = parser.parse_module();
         
-        let bar = module.get_function("bar".to_string()).unwrap();
-        let result = bar.eval(&mut HashMap::new());
+        let bar = module.get_function(&"bar".to_string()).unwrap();
+        let result = bar.eval(&mut HashMap::new(), None);
         assert_eq!(Ok(Some(3)), result);
         
-        let foo = module.get_function("foo".to_string()).unwrap();
-        let result = foo.eval(&mut HashMap::new());
+        let foo = module.get_function(&"foo".to_string()).unwrap();
+        let result = foo.eval(&mut HashMap::new(), None);
         assert_eq!(Ok(Some(5)), result);
         
         // When running the add function without arguments, it's going to fail
-        let add = module.get_function("add".to_string()).unwrap();
-        let result = add.eval(&mut HashMap::new());
+        let add = module.get_function(&"add".to_string()).unwrap();
+        let result = add.eval(&mut HashMap::new(), None);
         assert!(matches!(result, Err(_)));
 
         // But we can run the add function with arguments, and it will return the sum of both
         let mut map = HashMap::new();
         map.insert("first".to_string(), 10);
         map.insert("second".to_string(), 2);
-        let result = add.eval(&mut map);
+        let result = add.eval(&mut map, None);
         assert_eq!(Ok(Some(12)), result);
         println!("{map:?}");
     }

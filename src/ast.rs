@@ -12,9 +12,9 @@ mod tests {
     fn assert_ast_eval(text: &str, expected: i64) {
         let tokens = tokenize(&text.to_string());
         if let Ok(ast) = parse_expression(&tokens.unwrap()) {
-            match ast.eval(&mut HashMap::new()) {
-                Ok(value) => assert_eq!(value, expected),
-                Err(_) => assert!(false),
+            match ast.eval(&mut HashMap::new(), None) {
+                Ok(Some(value)) => assert_eq!(value, expected),
+                _ => assert!(false),
             }
         } else {
             assert!(false);

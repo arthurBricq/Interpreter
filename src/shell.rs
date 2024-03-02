@@ -43,19 +43,21 @@ impl Shell {
         }
     }
 
-    fn eval(&mut self, ast: &Expr) -> Result<i64, EvalError> {
-        ast.eval(&mut self.vars)
+    fn eval(&mut self, ast: &Expr) -> Result<Option<i64>, EvalError> {
+        ast.eval(&mut self.vars, None)
     }
 
     fn interpret(&mut self, text: &String) {
         match tokenize(text) {
             Ok(tokens) => {
+                println!("{}", format!("{tokens:?}").red());
                 match parse_expression(&tokens) {
                     Ok(ast) => {
                         println!("{}", format!("{ast:?}").italic().green());
                         match self.eval(&ast) {
-                            Ok(value) => println!("{value:?}"),
+                            Ok(Some(value)) => println!("{value:?}"),
                             Err(e) => println!("{} {e:?}", "Error while evaluating: ".red()),
+                            _ => {}
                         }
                     }
                     Err(e) => println!("{} {e:?}", "Error while parsing: ".red()),

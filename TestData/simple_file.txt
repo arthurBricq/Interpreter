@@ -19,7 +19,6 @@ fn main() {
     a = bar();
     b = foo();
     c = add(a, b); 
-    print(c);
     d = add(bar(), passthrough(foo())); 
-    print(d);
+    return d;
 }

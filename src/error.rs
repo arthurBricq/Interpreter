@@ -1,6 +1,7 @@
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum EvalError {
+    Error(&'static str),
     UnknownVariable(String),
     MultipleError(Vec<Box<EvalError>>),
 }

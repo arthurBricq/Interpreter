@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use crate::ast::expression::Expr;
 use crate::error::EvalError;
+use crate::module::Module;
 
+/// A statement is something that does not evaluate to something
 #[derive(Debug)]
 pub enum Statement {
     /// A statement of the type `expr;'
@@ -14,23 +16,23 @@ pub enum Statement {
 }
 
 impl Statement {
-    pub fn eval(&self, inputs: &mut HashMap<String, i64>) -> Result<Option<i64>, EvalError> {
+    pub fn eval(&self, inputs: &mut HashMap<String, i64>, module: Option<&Module>) -> Result<Option<i64>, EvalError> {
         match self {
             Statement::SimpleStatement(expr) => {
-                match expr.eval(inputs) {
+                match expr.eval(inputs, module) {
                     Ok(_) => return Ok(None),
                     Err(err) => return Err(err)
                 }
             }
             Statement::Return(expr) => {
-                return match expr.eval(inputs) {
-                    Ok(result) => Ok(Some(result)),
+                return match expr.eval(inputs, module) {
+                    Ok(result) => Ok(result),
                     Err(err) => Err(err)
                 }
             }
             Statement::CompoundStatement(statements) => {
                 for stm in statements {
-                    match stm.eval(inputs) {
+                    match stm.eval(inputs, module) {
                         Ok(None) => {}
                         Ok(Some(result)) => {
                             // If we received a result, it means we have to leave
@@ -59,7 +61,7 @@ mod tests {
         let statements = parser.parse_statements();
         assert_eq!(1, statements.len());
         let block = &statements[0];
-        let result = block.eval(&mut HashMap::new());
+        let result = block.eval(&mut HashMap::new(), None);
         println!("{result:?}");
         assert_eq!(result, expected);
     }
