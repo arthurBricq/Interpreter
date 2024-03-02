@@ -3,7 +3,7 @@ use crate::ast::declaration::Declaration::Function;
 use crate::ast::expression::Expr;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
 use crate::ast::statement::Statement;
-use crate::ast::statement::Statement::CompoundStatement;
+use crate::ast::statement::Statement::{CompoundStatement, If};
 use crate::error::ParserError;
 use crate::error::ParserError::{ExpectedDifferentToken, UnknownSyntax, WrongFunctionArgumentList, WrongFunctionBody};
 use crate::module::Module;
@@ -165,6 +165,22 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_one_statement(&mut self) -> Option<Statement> {
+        // Parse if statement
+        let checkpoint = self.index;
+        if let Some(Token::If) = self.consume() {
+            if let Some(Token::LPar) = self.consume() {
+                if let Ok(expr) = self.parse_expression() {
+                    if let Some(Token::RPar) = self.consume() {
+                        if let Some(body) = self.parse_compound_statement() {
+                            return Some(If(expr, Box::new(body)))
+                        }
+                    }
+                }
+            }
+        }
+        self.set_index(checkpoint);
+
+        // Parse return statement
         if let Some(Token::Return) = self.peek() {
             self.index += 1;
             if let Ok(expr) = self.parse_expression() {
@@ -176,12 +192,14 @@ impl<'a> Parser<'a> {
             // TODO error handling
             return None;
         }
+        // Parse simple statement
         if let Ok(expr) = self.parse_expression() {
             if let Some(Token::SemiColon) = self.peek() {
                 self.index += 1;
                 return Some(Statement::SimpleStatement(expr));
             }
         }
+        // Parse compound statement
         if let Some(compound) = self.parse_compound_statement() {
             return Some(compound)
         }
@@ -592,5 +610,13 @@ fn my_func_name() {
             }
             _ => panic!("Not ok")
         }
+    }
+
+    #[test]
+    fn test_parse_simple_if() {
+        let text = "if (1) {foo();}";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        println!("{ast:?}");
     }
 }

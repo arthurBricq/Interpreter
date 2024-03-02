@@ -20,5 +20,8 @@ fn main() {
     b = foo();
     c = add(a, b); 
     d = add(bar(), passthrough(foo())); 
+    if (0) {
+        return 10;
+    }
     return d;
 }

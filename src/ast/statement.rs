@@ -13,6 +13,8 @@ pub enum Statement {
     CompoundStatement(Vec<Box<Statement>>),
     /// A return statement, for functions
     Return(Expr),
+    /// If statement
+    If(Expr, Box<Statement>)
 }
 
 impl Statement {
@@ -41,7 +43,15 @@ impl Statement {
                         Err(err) => return Err(err)
                     }
                 }
-                return Ok(None)
+                Ok(None)
+            }
+            Statement::If(condition, body)  => {
+                if let Ok(Some(cond)) =  condition.eval(inputs, module) {
+                    if (cond != 0) {
+                        return body.eval(inputs, module)
+                    }
+                };
+                Ok(None)
             }
         }
     }
