@@ -573,10 +573,24 @@ fn my_func_name() {
     }
 
     #[test]
-    fn test_parse_function_in_function() {
+    fn test_parse_function_call_in_function() {
         let text = "foo(bar(1))";
         let tokens = tokenize(&text.to_string());
         let ast = parse_expression(&tokens.unwrap()).unwrap();
-        println!("{ast:?}");
+        match ast {
+            Expr::FunctionCall(name, args) => {
+                assert_eq!(name, "foo".to_string());
+                assert_eq!(1, args.len());
+                match &args[0].as_ref() {
+                    Expr::FunctionCall(name, args) => {
+                        assert_eq!(*name, "bar".to_string());
+                        assert_eq!(1, args.len());
+                        assert!(matches!(&args[0].as_ref(), ConstExpr(_)))
+                    }
+                    _ => panic!("Inner argument must be a fuction")
+                }
+            }
+            _ => panic!("Not ok")
+        }
     }
 }
