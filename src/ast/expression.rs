@@ -50,7 +50,7 @@ impl Expr {
                 Some(value) => Ok(*value),
                 None => Err(UnknownVariable(name.clone())),
             }
-            Expr::FunctionCall(name, args) => {
+            Expr::FunctionCall(_name, _args) => {
                 panic!("Function calls are not supported")
             }
         }

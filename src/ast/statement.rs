@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::ast::expression::Expr;
 use crate::error::EvalError;
-use crate::error::EvalError::NotImplemented;
 
 #[derive(Debug)]
 pub enum Statement {
@@ -43,7 +42,6 @@ impl Statement {
                 return Ok(None)
             }
         }
-        Err(NotImplemented)
     }
 }
 

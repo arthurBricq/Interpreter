@@ -141,6 +141,12 @@ impl<'a> Parser<'a> {
         if let Some(Token::LPar) = self.peek() {
             self.index += 1;
             let mut to_return = vec![];
+            // It's possible that a function has no argument at all
+            if let Some(Token::RPar) = self.peek() {
+                self.index += 1;
+                return Some(to_return);
+            }
+            // Otherwise, parse all the arguments
             while let Ok(expr) = self.parse_expression() {
                 to_return.push(Box::new(expr));
                 match self.peek() {
@@ -153,6 +159,7 @@ impl<'a> Parser<'a> {
                     _ => {}
                 }
             }
+
         }
         None
     }
@@ -546,14 +553,30 @@ fn my_func_name() {
         let mut parser = Parser::new(&tokens);
         let file = parser.parse_module();
         file.debug();
-        assert_eq!(4, file.number_of_functions());
+        assert_eq!(5, file.number_of_functions());
     }
     
     #[test]
-    fn test_parse_function_call() {
+    fn test_parse_function_call_with_args() {
         assert_ast_with_text(
             "test_func(1,2,3)",
             "FunctionCall(\"test_func\", [ConstExpr(1), ConstExpr(2), ConstExpr(3)])",
         );
+    }
+
+    #[test]
+    fn test_parse_function_call_without_args() {
+        assert_ast_with_text(
+            "test_func()",
+            "FunctionCall(\"test_func\", [])",
+        );
+    }
+
+    #[test]
+    fn test_parse_function_in_function() {
+        let text = "foo(bar(1))";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_expression(&tokens.unwrap()).unwrap();
+        println!("{ast:?}");
     }
 }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
+
 use crate::ast::statement::Statement;
 use crate::error::EvalError;
-use crate::error::EvalError::NotImplemented;
 
 /// A function argument currently only contains a string
 #[derive(Debug)]
@@ -18,18 +18,17 @@ impl Declaration {
     /// Evaluate the output of the function based on the provided arguments
     pub fn eval(&self, inputs: &mut HashMap<String, i64>) -> Result<Option<i64>, EvalError> {
         match self {
-            Declaration::Function(_name, args, body) => {
+            Declaration::Function(_name, _args, body) => {
                 // Is it normal that I don't use any of the args?
                 return body.eval(inputs);
             }
         }
-        
-        Err(NotImplemented)
     }
 }
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+
     use crate::parser::Parser;
     use crate::token::tokenize;
 
