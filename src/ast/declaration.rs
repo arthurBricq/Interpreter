@@ -18,16 +18,18 @@ pub enum Declaration {
 
 impl Declaration {
     /// Evaluate the output of the function based on the provided arguments
+    /// Inputs are the inputs of the function
     pub fn eval(&self, inputs: &mut HashMap<String, i64>, module: Option<&Module>) -> Result<Option<i64>, EvalError> {
-        match self {
+        return match self {
             Declaration::Function(_name, _args, body) => {
-                // Is it normal that I don't use any of the args?
-                // TODO use the proper module
-                return body.eval(inputs, module);
+                // When evaluating a function, we must 
+                // `body` is the compound statement of the function
+                body.eval(inputs, module)
             }
         }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -62,5 +64,50 @@ mod tests {
         let result = add.eval(&mut map, None);
         assert_eq!(Ok(Some(12)), result);
         println!("{map:?}");
+    }
+    
+    #[test]
+    fn test_error_when_running_function_with_variable_defined_out_of_scope() {
+        // we want to test that a function does not have access to variables outside of its scope
+        let file = "\
+fn foo() {
+    return a;
+}
+
+fn main() {
+    a = 1;
+    return foo();
+}
+        ".to_string();
+        let tokens = tokenize(&file).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        println!("{module:?}");
+        let result = module.run();
+        println!("result = {result:?}");
+        assert!(result.is_err());
+    }
+    
+    #[test]
+    fn test_success_when_passing_argument_to_functions() {
+        // we want to test that a function does not have access to variables outside of its scope
+        let file = "\
+fn foo(a) {
+    return a;
+}
+
+fn main() {
+    a = 1;
+    return foo(a);
+}
+        ".to_string();
+        let tokens = tokenize(&file).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        println!("{module:?}");
+        let result = module.run();
+        println!("result = {result:?}");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Some(1));
     }
 }

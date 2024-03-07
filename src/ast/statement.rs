@@ -14,6 +14,7 @@ pub enum Statement {
     /// A return statement, for functions
     Return(Expr),
     /// If statement
+    /// The else is encapsulated as an optional statement
     If(Expr, Box<Statement>)
 }
 
@@ -33,8 +34,11 @@ impl Statement {
                 }
             }
             Statement::CompoundStatement(statements) => {
+                // All the new variables defined in the new scope are bound to remain in the scope
+                // This forbid variable-side effect
+                let mut copied_environment = inputs.clone();
                 for stm in statements {
-                    match stm.eval(inputs, module) {
+                    match stm.eval(&mut copied_environment, module) {
                         Ok(None) => {}
                         Ok(Some(result)) => {
                             // If we received a result, it means we have to leave
@@ -82,4 +86,23 @@ mod tests {
         assert_statement_eval("{a=1;a=2;}", Ok(None));
         assert_statement_eval("{a=1; b=1; return a + b}", Ok(Some(2)));
     }
+    #[test]
+    fn test_error_when_using_variable_out_of_compound_scope() {
+        // we want to test that a function does not have access to variables outside of its scope
+        let file = "\
+fn main() {
+    a = 1;
+    { b = 2; }
+    return b;
+}
+        ".to_string();
+        let tokens = tokenize(&file).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        println!("{module:?}");
+        let result = module.run();
+        println!("result = {result:?}");
+        assert!(result.is_err());
+    }
+
 }

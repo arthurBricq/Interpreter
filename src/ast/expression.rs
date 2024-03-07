@@ -19,6 +19,9 @@ pub enum Expr {
 }
 
 impl Expr {
+    /// Evaluates the expression
+    /// buf: local variables (at the current scope)
+    /// module: current evaluation module
     pub fn eval(&self, buf: &mut HashMap<String, i64>, module: Option<&Module>) -> Result<Option<i64>, EvalError> {
         match self {
             ConstExpr(value) => Ok(Some(*value)),
@@ -58,14 +61,17 @@ impl Expr {
                     return Err(EvalError::Error("Module not found"))
                 }
                 if let Some(Declaration::Function(_name, args, func)) =  module.unwrap().get_function(name) {
+                    // i. evaluate the inputs
+                    let mut function_inputs = HashMap::new();
                     for i in 0..args.len() {
                         let arg_name = &args[i];
                         let arg_expr = &inputs[i];
                         if let Ok(Some(value)) = arg_expr.eval(buf, module) {
-                            buf.insert(arg_name.0.clone(), value);
+                            function_inputs.insert(arg_name.0.clone(), value);
                         }
                     }
-                    func.eval(buf, module)
+                    // We don't provide the function call with all the variables, but just with the provided arguments
+                    func.eval(&mut function_inputs, module)
                 } else {
                     Err(EvalError::Error("Function not found"))
                 }

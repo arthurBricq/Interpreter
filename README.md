@@ -1,5 +1,14 @@
 # Basic interpreter in Rust
 
+This project is an interpreter for a programming that I created. 
+
+I did this language only to **learn more about programming language theory and intepreters** ! 
+
+It's a C-like
+
+
+# Shell-like intrepreter
+
 - Operation on integers: +, -, *, /
 - Python-like assignment
 - Usage of variables
@@ -52,20 +61,19 @@ MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), Unknow
     - ** for power
     - % for modulo
     
-**Next milestone** : Support float, integers, bool and string
+**Next milestone** : Typing - Support float, integers, bool and string
 
 - [ ] integer
 - [ ] float
 - [ ] bool
 - [ ] string
 
-**Next milestone**: functions 
+**Next milestone**: functions and logic
 
-- [x] multi-line parsing: introduce statements
-- [x] parse simple functions
-- [ ] eval simple functions
-- [ ] parse a file
-- [ ] parse typed functions
+- [ ] else
+- [ ] loop + break
+- [ ] typed functions
+- [ ] Implementation of a stack
 
 **Next milestone**: web-assembly deployment of the shell
 
