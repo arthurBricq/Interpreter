@@ -40,7 +40,7 @@ impl Module {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
-    use crate::ast::expression::Value::IntValue;
+    use crate::ast::expression::Value::{BoolValue, IntValue};
     use crate::parser::Parser;
     use crate::token::tokenize;
 
@@ -60,8 +60,32 @@ mod tests {
         let tokens = tokenize(&text).unwrap();
         let mut parser = Parser::new(&tokens);
         let module = parser.parse_module();
+
         let bar = module.get_function(&"bar".to_string()).unwrap();
         let result = bar.eval(&mut HashMap::new(), Some(&module));
         assert_eq!(result, Ok(IntValue(0)));
+
+        let dog = module.get_function(&"dog".to_string()).unwrap();
+        let result = dog.eval(&mut HashMap::new(), Some(&module));
+        assert_eq!(result, Ok(IntValue(0)));
+
+        let cat = module.get_function(&"cat".to_string()).unwrap();
+        let result = cat.eval(&mut HashMap::new(), Some(&module));
+        assert_eq!(result, Ok(IntValue(20)));
+    }
+        #[test]
+    fn test_returns_true_or_false() {
+        let text = std::fs::read_to_string("TestData/if_else_loops.txt").unwrap();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+            
+        let returns_true = module.get_function(&"returns_true".to_string()).unwrap();
+        let result = returns_true.eval(&mut HashMap::new(), Some(&module));
+        assert_eq!(result, Ok(BoolValue(true)));
+        
+        let returns_false = module.get_function(&"returns_false".to_string()).unwrap();
+        let result = returns_false.eval(&mut HashMap::new(), Some(&module));
+        assert_eq!(result, Ok(BoolValue(false)));
     }
 }

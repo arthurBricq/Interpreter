@@ -1,4 +1,4 @@
-fn foo(condition) {
+fn woof(condition) {
     if (condition) {
         return 10;
     } else {
@@ -7,9 +7,29 @@ fn foo(condition) {
 }
 
 fn bar() {
-    a = foo(1);
-    b = foo(0);
+    a = woof(1);
+    b = woof(0);
     return a + b;
+}
+
+fn dog() {
+    a = woof(true);
+    b = woof(false);
+    return a + b;
+}
+
+fn cat() {
+    a = woof(true);
+    b = woof(true);
+    return a + b;
+}
+
+fn returns_true() {
+    return true;
+}
+
+fn returns_false() {
+    return false;
 }
 
 fn main() {
