@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::ast::declaration::Declaration;
+use crate::ast::expression::Value;
 use crate::error::EvalError;
 
 #[derive(Debug)]
@@ -24,7 +25,7 @@ impl Module {
     }
 
     /// Evaluate the `main` function
-    pub fn run(&self) -> Result<Option<i64>, EvalError> {
+    pub fn run(&self) -> Result<Value, EvalError> {
         let main = self.get_function(&"main".to_string()).unwrap();
         main.eval(&mut HashMap::new(), Some(&self))
     }
@@ -39,6 +40,7 @@ impl Module {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use crate::ast::expression::Value::IntValue;
     use crate::parser::Parser;
     use crate::token::tokenize;
 
@@ -60,6 +62,6 @@ mod tests {
         let module = parser.parse_module();
         let bar = module.get_function(&"bar".to_string()).unwrap();
         let result = bar.eval(&mut HashMap::new(), Some(&module));
-        assert_eq!(result, Ok(Some(0)));
+        assert_eq!(result, Ok(IntValue(0)));
     }
 }

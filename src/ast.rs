@@ -5,6 +5,7 @@ pub mod declaration;
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use crate::ast::expression::Value::IntValue;
 
     use crate::parser::parse_expression;
     use crate::token::*;
@@ -13,7 +14,7 @@ mod tests {
         let tokens = tokenize(&text.to_string());
         if let Ok(ast) = parse_expression(&tokens.unwrap()) {
             match ast.eval(&mut HashMap::new(), None) {
-                Ok(Some(value)) => assert_eq!(value, expected),
+                Ok(IntValue(value)) => assert_eq!(value, expected),
                 _ => assert!(false),
             }
         } else {

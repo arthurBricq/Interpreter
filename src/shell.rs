@@ -9,7 +9,7 @@ use crate::parser::parse_expression;
 use crate::token::tokenize;
 
 pub struct Shell {
-    vars: HashMap<String, i64>,
+    vars: HashMap<String, Value>,
 }
 
 impl Shell {
@@ -43,7 +43,7 @@ impl Shell {
         }
     }
 
-    fn eval(&mut self, ast: &Expr) -> Result<Option<i64>, EvalError> {
+    fn eval(&mut self, ast: &Expr) -> Result<Value, EvalError> {
         ast.eval(&mut self.vars, None)
     }
 
@@ -55,7 +55,7 @@ impl Shell {
                     Ok(ast) => {
                         println!("{}", format!("{ast:?}").italic().green());
                         match self.eval(&ast) {
-                            Ok(Some(value)) => println!("{value:?}"),
+                            Ok(value) => println!("{value:?}"),
                             Err(e) => println!("{} {e:?}", "Error while evaluating: ".red()),
                             _ => {}
                         }

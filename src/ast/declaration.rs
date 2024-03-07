@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::ast::expression::Value;
 
 use crate::ast::statement::Statement;
 use crate::error::EvalError;
@@ -19,7 +20,7 @@ pub enum Declaration {
 impl Declaration {
     /// Evaluate the output of the function based on the provided arguments
     /// Inputs are the inputs of the function
-    pub fn eval(&self, inputs: &mut HashMap<String, i64>, module: Option<&Module>) -> Result<Option<i64>, EvalError> {
+    pub fn eval(&self, inputs: &mut HashMap<String, Value>, module: Option<&Module>) -> Result<Value, EvalError> {
         return match self {
             Declaration::Function(_name, _args, body) => {
                 // When evaluating a function, we must 
@@ -33,6 +34,7 @@ impl Declaration {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use crate::ast::expression::Value::IntValue;
 
     use crate::parser::Parser;
     use crate::token::tokenize;
@@ -46,11 +48,11 @@ mod tests {
         
         let bar = module.get_function(&"bar".to_string()).unwrap();
         let result = bar.eval(&mut HashMap::new(), None);
-        assert_eq!(Ok(Some(3)), result);
+        assert_eq!(Ok(IntValue(3)), result);
         
         let foo = module.get_function(&"foo".to_string()).unwrap();
         let result = foo.eval(&mut HashMap::new(), None);
-        assert_eq!(Ok(Some(5)), result);
+        assert_eq!(Ok(IntValue(5)), result);
         
         // When running the add function without arguments, it's going to fail
         let add = module.get_function(&"add".to_string()).unwrap();
@@ -59,10 +61,10 @@ mod tests {
 
         // But we can run the add function with arguments, and it will return the sum of both
         let mut map = HashMap::new();
-        map.insert("first".to_string(), 10);
-        map.insert("second".to_string(), 2);
+        map.insert("first".to_string(), IntValue(10));
+        map.insert("second".to_string(), IntValue(2));
         let result = add.eval(&mut map, None);
-        assert_eq!(Ok(Some(12)), result);
+        assert_eq!(Ok(IntValue(12)), result);
         println!("{map:?}");
     }
     
@@ -104,6 +106,6 @@ fn main() {
         let module = parser.parse_module();
         let result = module.run();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), Some(1));
+        assert_eq!(result.unwrap(), IntValue(1));
     }
 }

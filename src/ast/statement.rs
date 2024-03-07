@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::ast::expression::Expr;
+use crate::ast::expression::{Expr, Value};
 use crate::error::EvalError;
 use crate::module::Module;
 
@@ -19,11 +19,11 @@ pub enum Statement {
 }
 
 impl Statement {
-    pub fn eval(&self, inputs: &mut HashMap<String, i64>, module: Option<&Module>) -> Result<Option<i64>, EvalError> {
+    pub fn eval(&self, inputs: &mut HashMap<String, Value>, module: Option<&Module>) -> Result<Value, EvalError> {
         match self {
             Statement::SimpleStatement(expr) => {
                 match expr.eval(inputs, module) {
-                    Ok(_) => return Ok(None),
+                    Ok(_) => return Ok(Value::None),
                     Err(err) => return Err(err)
                 }
             }
@@ -39,25 +39,32 @@ impl Statement {
                 let mut copied_environment = inputs.clone();
                 for stm in statements {
                     match stm.eval(&mut copied_environment, module) {
-                        Ok(None) => {}
-                        Ok(Some(result)) => {
-                            // If we received a result, it means we have to leave
-                            return Ok(Some(result))
+                        Ok(Value::None) => {}
+                        Ok(result) => {
+                            // If any of the statement returned anything, we return
+                            // TODO there is probably a problem here.
+                            return Ok(result)
                         }
                         Err(err) => return Err(err)
                     }
                 }
-                Ok(None)
+                Ok(Value::None)
             }
             Statement::If(condition, body, else_statement)  => {
-                if let Ok(Some(cond)) =  condition.eval(inputs, module) {
-                    if cond != 0 {
+                if let Ok(cond) =  condition.eval(inputs, module) {
+                    let test = match cond {
+                        Value::IntValue(i) => i != 0,
+                        Value::BoolValue(b) => b,
+                        Value::None => false
+                    };
+                    
+                    if test {
                         return body.eval(inputs, module)
                     } else if let Some(else_body) = else_statement {
                         return else_body.eval(inputs, module)
                     }
                 };
-                Ok(None)
+                Ok(Value::None)
             }
         }
     }
@@ -66,27 +73,27 @@ impl Statement {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use crate::ast::expression::Value;
 
     use crate::error::EvalError;
     use crate::parser::{parse_statements, Parser};
     use crate::token::tokenize;
 
-    fn assert_statement_eval(text: &str, expected: Result<Option<i64>, EvalError>) {
+    fn assert_statement_eval(text: &str, expected: Result<Value, EvalError>) {
         let tokens = tokenize(&text.to_string()).unwrap();
         let mut parser = Parser::new(&tokens);
         let statements = parser.parse_statements();
         assert_eq!(1, statements.len());
         let block = &statements[0];
         let result = block.eval(&mut HashMap::new(), None);
-        println!("{result:?}");
         assert_eq!(result, expected);
     }
 
     #[test]
     fn test_statement_eval() {
-        assert_statement_eval("a=1;", Ok(None));
-        assert_statement_eval("{a=1;a=2;}", Ok(None));
-        assert_statement_eval("{a=1; b=1; return a + b}", Ok(Some(2)));
+        assert_statement_eval("a=1;", Ok(Value::None));
+        assert_statement_eval("{a=1;a=2;}", Ok(Value::None));
+        assert_statement_eval("{a=1; b=1; return a + b}", Ok(Value::IntValue(2)));
     }
     #[test]
     fn test_error_when_using_variable_out_of_compound_scope() {
@@ -113,7 +120,7 @@ fn main() {
         let tokens = tokenize(&text.to_string());
         let ast = parse_statements(&tokens.unwrap());
         let statement = &ast[0];
-        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Some(3)))
+        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Value::IntValue(3)))
     }
     
     #[test]
@@ -122,7 +129,7 @@ fn main() {
         let tokens = tokenize(&text.to_string());
         let ast = parse_statements(&tokens.unwrap());
         let statement = &ast[0];
-        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Some(4)))
+        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Value::IntValue(4)))
     }
 
 }

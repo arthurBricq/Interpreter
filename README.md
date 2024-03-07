@@ -4,7 +4,11 @@ This project is an interpreter for a programming that I created.
 
 I did this language only to **learn more about programming language theory and intepreters** ! 
 
-It's a C-like
+Features of the language
+- C-like differentiation of expressions and statements
+- Functions
+- If, Else, 
+- Typed variables
 
 
 # Shell-like intrepreter
@@ -63,6 +67,7 @@ MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), Unknow
     
 **Next milestone** : Typing - Support float, integers, bool and string
 
+- [ ] create a type system
 - [ ] bool
 - [ ] integer
 - [ ] float
