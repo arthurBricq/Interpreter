@@ -2,7 +2,7 @@ use crate::ast::declaration::{Declaration, FnArg};
 use crate::ast::declaration::Declaration::Function;
 use crate::ast::expression::{Expr, Value};
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
-use crate::ast::expression::Value::IntValue;
+use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::ast::statement::Statement;
 use crate::ast::statement::Statement::{CompoundStatement, If};
 use crate::error::ParserError;
@@ -304,6 +304,14 @@ impl<'a> Parser<'a> {
             self.index += 1;
             return Some(ConstExpr(IntValue(value)));
         }
+        if let Some(Token::True) = self.peek() {
+            self.index += 1;
+            return Some(ConstExpr(BoolValue(true)));
+        }
+        if let Some(Token::False) = self.peek() {
+            self.index += 1;
+            return Some(ConstExpr(BoolValue(false)));
+        }
         // Identifier
         if let Some(Token::Ident(s)) = self.peek() {
             self.index += 1;
@@ -357,10 +365,11 @@ pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
 #[cfg(test)]
 pub(crate) mod tests {
     use crate::ast::declaration::Declaration;
-    use crate::ast::expression::Expr;
+    use crate::ast::expression::{Expr, Value};
     use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr};
     use crate::ast::expression::Value::IntValue;
     use crate::ast::statement::Statement;
+    use crate::ast::statement::Statement::SimpleStatement;
     use crate::parser::{parse_expression, parse_statements, Parser};
     use crate::token::*;
 
@@ -576,5 +585,25 @@ fn my_func_name() {
         // Check that we parsed an IF statement without else clause
         println!("{ast:?}");
         assert!(matches!(ast[0], Statement::If(_, _, Some(_))))
+    }
+    
+    #[test]
+    fn test_parse_bool_value() {
+        let text = "a = true;";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        // Check that we parsed an IF statement without else clause
+        println!("{ast:?}");
+        match &ast[0] {
+            SimpleStatement(statement) => {
+                match statement {
+                    AssignmentExpr(_, expr) => {
+                        assert!(matches!(expr.as_ref(), ConstExpr(Value::BoolValue(_))))
+                    }
+                    _ => panic!("false")
+                }
+            }
+            _ => panic!("false")
+        }
     }
 }
