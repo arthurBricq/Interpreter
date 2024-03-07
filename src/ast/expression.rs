@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::ast::declaration::Declaration;
-use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, IntExpr, FunctionCall, IdentExpr, ParenthesisExpr, BoolExpr};
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, FunctionCall, IdentExpr, ParenthesisExpr};
 use crate::ast::expression::Value::IntValue;
 use crate::error::EvalError;
 use crate::error::EvalError::{MultipleError, UnknownVariable};
@@ -19,8 +19,7 @@ pub enum Value {
 /// An expression is something that evaluates to something
 #[derive(Debug, Eq, PartialEq)]
 pub enum Expr {
-    IntExpr(i64),
-    BoolExpr(bool),
+    ConstExpr(Value),
     NegExpr(Box<Expr>),
     ParenthesisExpr(Box<Expr>),
     BinaryExpr(Box<Expr>, Op, Box<Expr>),
@@ -35,8 +34,7 @@ impl Expr {
     /// module: current evaluation module
     pub fn eval(&self, buf: &mut HashMap<String, Value>, module: Option<&Module>) -> Result<Value, EvalError> {
         match self {
-            IntExpr(value) => Ok(Value::IntValue(*value)),
-            BoolExpr(value) => panic!("boolean not yet supported"),
+            ConstExpr(value) => Ok(value.clone()),
             Expr::NegExpr(expr) => match expr.eval(buf, module) {
                 Ok(IntValue(value)) => Ok(IntValue(-value)),
                 Err(e) => Err(e),

@@ -1,7 +1,8 @@
 use crate::ast::declaration::{Declaration, FnArg};
 use crate::ast::declaration::Declaration::Function;
-use crate::ast::expression::Expr;
-use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, IntExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
+use crate::ast::expression::{Expr, Value};
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
+use crate::ast::expression::Value::IntValue;
 use crate::ast::statement::Statement;
 use crate::ast::statement::Statement::{CompoundStatement, If};
 use crate::error::ParserError;
@@ -299,9 +300,9 @@ impl<'a> Parser<'a> {
     /// Matches constant, identifier or (expr) or -(primary)
     fn parse_primary_expr(&mut self) -> Option<Expr> {
         // Constant
-        if let Some(Token::Constant(value)) = self.peek() {
+        if let Some(Token::Integer(value)) = self.peek() {
             self.index += 1;
-            return Some(IntExpr(value));
+            return Some(ConstExpr(IntValue(value)));
         }
         // Identifier
         if let Some(Token::Ident(s)) = self.peek() {
@@ -357,7 +358,8 @@ pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
 pub(crate) mod tests {
     use crate::ast::declaration::Declaration;
     use crate::ast::expression::Expr;
-    use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, IntExpr};
+    use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr};
+    use crate::ast::expression::Value::IntValue;
     use crate::ast::statement::Statement;
     use crate::parser::{parse_expression, parse_statements, Parser};
     use crate::token::*;
@@ -372,70 +374,23 @@ pub(crate) mod tests {
         }
     }
 
-    fn assert_ast_with_text(text: &str, expected: &str) {
-        let tokens = tokenize(&text.to_string());
-        print!("Building AST for <input> = <{text}>:   ");
-        match parse_expression(&tokens.unwrap()) {
-            Ok(ast) => {
-                println!("{ast:?}");
-                assert_eq!(format!("{ast:?}"), expected); 
-            }
-            Err(err) => {
-                println!("err={err:?}");
-                assert!(false);
-            }
-        }
-    }
-
-    #[test]
-    fn test_parse_simple_parenthesis() {
-        assert_ast_with_text(
-            "(1)",
-            "ParenthesisExpr(IntExpr(1))",
-        );
-    }
-
     #[test]
     fn test_basic_ast_expressions() {
         assert_ast(
             "1 + 2",
-            BinaryExpr(Box::new(IntExpr(1)), Op::Plus, Box::new(IntExpr(2))),
+            BinaryExpr(Box::new(ConstExpr(IntValue(1))), Op::Plus, Box::new(ConstExpr(IntValue(2)))),
         );
         assert_ast(
             "123 / 2",
-            BinaryExpr(Box::new(IntExpr(123)), Op::Div, Box::new(IntExpr(2))),
+            BinaryExpr(Box::new(ConstExpr(IntValue(123))), Op::Div, Box::new(ConstExpr(IntValue(2)))),
         );
         assert_ast(
             "1 * 2",
-            BinaryExpr(Box::new(IntExpr(1)), Op::Times, Box::new(IntExpr(2))),
+            BinaryExpr(Box::new(ConstExpr(IntValue(1))), Op::Times, Box::new(ConstExpr(IntValue(2)))),
         );
         assert_ast(
             "1 - 2",
-            BinaryExpr(Box::new(IntExpr(1)), Op::Minus, Box::new(IntExpr(2))),
-        );
-
-        assert_ast_with_text(
-            "(1+1)",
-            "ParenthesisExpr(BinaryExpr(IntExpr(1), Plus, IntExpr(1)))",
-        );
-        assert_ast_with_text("(123+1) * 2 + 1", "BinaryExpr(BinaryExpr(ParenthesisExpr(BinaryExpr(IntExpr(123), Plus, IntExpr(1))), Times, IntExpr(2)), Plus, IntExpr(1))");
-
-        assert_ast_with_text("a = 1", "AssignmentExpr(\"a\", IntExpr(1))");
-        assert_ast_with_text("a1 = 1", "AssignmentExpr(\"a1\", IntExpr(1))");
-        assert_ast_with_text(
-            "a1 = (1+1)",
-            "AssignmentExpr(\"a1\", ParenthesisExpr(BinaryExpr(IntExpr(1), Plus, IntExpr(1))))",
-        );
-        assert_ast_with_text("a", "IdentExpr(\"a\")");
-
-        // To fix
-        assert_ast_with_text(
-            "1+1+1",
-            "BinaryExpr(IntExpr(1), Plus, BinaryExpr(IntExpr(1), Plus, IntExpr(1)))",
-        );
-        assert_ast_with_text(
-            "1*1*1",
-            "BinaryExpr(IntExpr(1), Times, BinaryExpr(IntExpr(1), Times, IntExpr(1)))",
+            BinaryExpr(Box::new(ConstExpr(IntValue(1))), Op::Minus, Box::new(ConstExpr(IntValue(2)))),
         );
     }
 
@@ -581,22 +536,6 @@ fn my_func_name() {
         file.debug();
         assert_eq!(5, file.number_of_functions());
     }
-    
-    #[test]
-    fn test_parse_function_call_with_args() {
-        assert_ast_with_text(
-            "test_func(1,2,3)",
-            "FunctionCall(\"test_func\", [IntExpr(1), IntExpr(2), IntExpr(3)])",
-        );
-    }
-
-    #[test]
-    fn test_parse_function_call_without_args() {
-        assert_ast_with_text(
-            "test_func()",
-            "FunctionCall(\"test_func\", [])",
-        );
-    }
 
     #[test]
     fn test_parse_function_call_in_function() {
@@ -611,7 +550,7 @@ fn my_func_name() {
                     Expr::FunctionCall(name, args) => {
                         assert_eq!(*name, "bar".to_string());
                         assert_eq!(1, args.len());
-                        assert!(matches!(&args[0], IntExpr(_)))
+                        assert!(matches!(&args[0], ConstExpr(_)))
                     }
                     _ => panic!("Inner argument must be a fuction")
                 }

@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Comma, Constant, Else, Equal, False, Fn, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp, True};
+use crate::token::Token::{Comma, Integer, Else, Equal, False, Fn, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp, True};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -15,7 +15,7 @@ pub enum Op {
 pub enum Token {
     TokenOp(Op),
     Ident(String),
-    Constant(i64),
+    Integer(i64),
     Equal,
     /// Symbols
     LPar, RPar,
@@ -54,7 +54,7 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
                     break;
                 }
             }
-            tokens.push(Constant(num as i64));
+            tokens.push(Integer(num as i64));
             continue;
         }
 
@@ -111,7 +111,7 @@ mod tests {
     use crate::token::Op::{Div, Minus, Plus, Times};
     use crate::token::{tokenize, Token};
 
-    use crate::token::Token::{Constant, Equal, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
+    use crate::token::Token::{Integer, Equal, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
 
     fn assert_tokens(text: &str, tokens: Vec<Token>) {
         let computed = tokenize(&text.to_string()).unwrap();
@@ -142,33 +142,33 @@ mod tests {
         assert_tokens(
             "1+2-31",
             vec![
-                Constant(1),
+                Integer(1),
                 TokenOp(Plus),
-                Constant(2),
+                Integer(2),
                 TokenOp(Minus),
-                Constant(31),
+                Integer(31),
             ],
         );
         assert_tokens(
             "a = 1;",
-            vec![Ident("a".to_string()), Equal, Constant(1), SemiColon],
+            vec![Ident("a".to_string()), Equal, Integer(1), SemiColon],
         );
-        assert_tokens("1+1", vec![Constant(1), TokenOp(Plus), Constant(1)]);
+        assert_tokens("1+1", vec![Integer(1), TokenOp(Plus), Integer(1)]);
         assert_tokens(
             "1+1;",
-            vec![Constant(1), TokenOp(Plus), Constant(1), SemiColon],
+            vec![Integer(1), TokenOp(Plus), Integer(1), SemiColon],
         );
         assert_tokens(
             "{1+1;}",
-            vec![LBracket, Constant(1), TokenOp(Plus), Constant(1), SemiColon, RBracket],
+            vec![LBracket, Integer(1), TokenOp(Plus), Integer(1), SemiColon, RBracket],
         );
         assert_tokens(
             "return 1;",
-            vec![Return, Constant(1), SemiColon],
+            vec![Return, Integer(1), SemiColon],
         );
         assert_tokens(
             "if (1) { return 1; }",
-            vec![If, LPar, Constant(1), RPar, LBracket, Return, Constant(1), SemiColon, RBracket],
+            vec![If, LPar, Integer(1), RPar, LBracket, Return, Integer(1), SemiColon, RBracket],
         );
     }
 }
