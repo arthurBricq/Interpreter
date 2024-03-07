@@ -38,11 +38,12 @@ impl Module {
 }
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use crate::parser::Parser;
     use crate::token::tokenize;
 
     #[test]
-    pub fn test_eval_main() {
+    fn test_eval_main() {
         let text = crate::parser::tests::get_simple_file();
         let tokens = tokenize(&text).unwrap();
         let mut parser = Parser::new(&tokens);
@@ -51,4 +52,14 @@ mod tests {
         println!("{result:?}");
     }
 
+    #[test]
+    fn test_if_fonction_in_module() {
+        let text = std::fs::read_to_string("TestData/if_else_loops.txt").unwrap();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        let bar = module.get_function(&"bar".to_string()).unwrap();
+        let result = bar.eval(&mut HashMap::new(), Some(&module));
+        assert_eq!(result, Ok(Some(0)));
+    }
 }

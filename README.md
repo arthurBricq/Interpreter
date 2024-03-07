@@ -70,10 +70,8 @@ MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), Unknow
 
 **Next milestone**: functions and logic
 
-- [ ] else
 - [ ] loop + break
 - [ ] typed functions
-- [ ] Implementation of a stack
 
 **Next milestone**: web-assembly deployment of the shell
 

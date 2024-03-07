@@ -15,7 +15,7 @@ pub enum Statement {
     Return(Expr),
     /// If statement
     /// The else is encapsulated as an optional statement
-    If(Expr, Box<Statement>)
+    If(Expr, Box<Statement>, Option<Box<Statement>>)
 }
 
 impl Statement {
@@ -49,10 +49,12 @@ impl Statement {
                 }
                 Ok(None)
             }
-            Statement::If(condition, body)  => {
+            Statement::If(condition, body, else_statement)  => {
                 if let Ok(Some(cond)) =  condition.eval(inputs, module) {
-                    if (cond != 0) {
+                    if cond != 0 {
                         return body.eval(inputs, module)
+                    } else if let Some(else_body) = else_statement {
+                        return else_body.eval(inputs, module)
                     }
                 };
                 Ok(None)
@@ -66,7 +68,7 @@ mod tests {
     use std::collections::HashMap;
 
     use crate::error::EvalError;
-    use crate::parser::Parser;
+    use crate::parser::{parse_statements, Parser};
     use crate::token::tokenize;
 
     fn assert_statement_eval(text: &str, expected: Result<Option<i64>, EvalError>) {
@@ -103,6 +105,24 @@ fn main() {
         let result = module.run();
         println!("result = {result:?}");
         assert!(result.is_err());
+    }
+    
+    #[test]
+    fn test_if_evaluation() {
+        let text = "if (1) {return 3;}";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        let statement = &ast[0];
+        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Some(3)))
+    }
+    
+    #[test]
+    fn test_else_evaluation() {
+        let text = "if (0) {return 3;} else {return 4}";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        let statement = &ast[0];
+        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Some(4)))
     }
 
 }

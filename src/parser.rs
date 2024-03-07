@@ -172,7 +172,15 @@ impl<'a> Parser<'a> {
                 if let Ok(expr) = self.parse_expression() {
                     if let Some(Token::RPar) = self.consume() {
                         if let Some(body) = self.parse_compound_statement() {
-                            return Some(If(expr, Box::new(body)))
+                            // If there is an else statement, parse it here
+                            if let Some(Token::Else) = self.peek() {
+                                self.index += 1;
+                                if let Some(else_statement) = self.parse_one_statement() {
+                                    return Some(If(expr, Box::new(body), Some(Box::new(else_statement))))
+                                }
+                            } else {
+                                return Some(If(expr, Box::new(body), None))
+                            }
                         }
                     }
                 }
@@ -617,6 +625,17 @@ fn my_func_name() {
         let text = "if (1) {foo();}";
         let tokens = tokenize(&text.to_string());
         let ast = parse_statements(&tokens.unwrap());
+        // Check that we parsed an IF statement without else clause
+        assert!(matches!(ast[0], Statement::If(_, _, None)))
+    }
+    
+    #[test]
+    fn test_parse_simple_if_else() {
+        let text = "if (1) {foo();} else {bar();}";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        // Check that we parsed an IF statement without else clause
         println!("{ast:?}");
+        assert!(matches!(ast[0], Statement::If(_, _, Some(_))))
     }
 }

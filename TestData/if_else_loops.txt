@@ -1,0 +1,17 @@
+fn foo(condition) {
+    if (condition) {
+        return 10;
+    } else {
+        return -10;
+    }
+}
+
+fn bar() {
+    a = foo(1);
+    b = foo(0);
+    return a + b;
+}
+
+fn main() {
+    return 0;
+}

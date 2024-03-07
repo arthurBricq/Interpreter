@@ -82,9 +82,7 @@ fn main() {
         let tokens = tokenize(&file).unwrap();
         let mut parser = Parser::new(&tokens);
         let module = parser.parse_module();
-        println!("{module:?}");
         let result = module.run();
-        println!("result = {result:?}");
         assert!(result.is_err());
     }
     
@@ -104,9 +102,7 @@ fn main() {
         let tokens = tokenize(&file).unwrap();
         let mut parser = Parser::new(&tokens);
         let module = parser.parse_module();
-        println!("{module:?}");
         let result = module.run();
-        println!("result = {result:?}");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), Some(1));
     }
