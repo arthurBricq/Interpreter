@@ -137,7 +137,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Try to parse the list of arguments in a function call
-    fn parse_function_call_argument_list(&mut self) -> Option<Vec<Box<Expr>>> {
+    fn parse_function_call_argument_list(&mut self) -> Option<Vec<Expr>> {
         if let Some(Token::LPar) = self.peek() {
             self.index += 1;
             let mut to_return = vec![];
@@ -148,7 +148,7 @@ impl<'a> Parser<'a> {
             }
             // Otherwise, parse all the arguments
             while let Ok(expr) = self.parse_expression() {
-                to_return.push(Box::new(expr));
+                to_return.push(expr);
                 match self.peek() {
                     None => {}
                     Some(Token::Comma) => self.index += 1,
@@ -213,7 +213,7 @@ impl<'a> Parser<'a> {
             self.index += 1;
             let mut statements = vec![];
             while let Some(stm) = self.parse_one_statement() {
-                statements.push(Box::new(stm));
+                statements.push(stm);
             }
             // Once there are no more statement being parsed, try to parse
             // a closing parenthesis.
@@ -457,10 +457,10 @@ pub(crate) mod tests {
         if let Some(Statement::CompoundStatement(statements)) = parser.parse_compound_statement() {
             println!("result = {statements:?}");
             assert_eq!(statements.len(), 4);
-            assert!(matches!(statements[0].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
-            assert!(matches!(statements[1].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
-            assert!(matches!(statements[2].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
-            assert!(matches!(statements[3].as_ref(), Statement::SimpleStatement(BinaryExpr(_,Op::Plus, _))));
+            assert!(matches!(statements[0], Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[1], Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[2], Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[3], Statement::SimpleStatement(BinaryExpr(_,Op::Plus, _))));
         } else {
             println!("failed");
             assert!(false);
@@ -479,10 +479,10 @@ pub(crate) mod tests {
         if let Some(Statement::CompoundStatement(statements)) = parser.parse_compound_statement() {
             println!("result = {statements:?}");
             assert_eq!(statements.len(), 4);
-            assert!(matches!(statements[0].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
-            assert!(matches!(statements[1].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
-            assert!(matches!(statements[2].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
-            assert!(matches!(statements[3].as_ref(), Statement::SimpleStatement(BinaryExpr(_,Op::Plus, _))));
+            assert!(matches!(statements[0], Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[1], Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[2], Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[3], Statement::SimpleStatement(BinaryExpr(_,Op::Plus, _))));
         } else {
             println!("failed");
             assert!(false);
@@ -498,9 +498,9 @@ pub(crate) mod tests {
         if let Some(Statement::CompoundStatement(statements)) = parser.parse_compound_statement() {
             println!("result = {statements:?}");
             assert_eq!(statements.len(), 3);
-            assert!(matches!(statements[0].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
-            assert!(matches!(statements[1].as_ref(), Statement::SimpleStatement(AssignmentExpr(_, _))));
-            assert!(matches!(statements[2].as_ref(), Statement::Return(_)));
+            assert!(matches!(statements[0], Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[1], Statement::SimpleStatement(AssignmentExpr(_, _))));
+            assert!(matches!(statements[2], Statement::Return(_)));
         } else {
             println!("failed");
             assert!(false);
@@ -599,11 +599,11 @@ fn my_func_name() {
             Expr::FunctionCall(name, args) => {
                 assert_eq!(name, "foo".to_string());
                 assert_eq!(1, args.len());
-                match &args[0].as_ref() {
+                match &args[0] {
                     Expr::FunctionCall(name, args) => {
                         assert_eq!(*name, "bar".to_string());
                         assert_eq!(1, args.len());
-                        assert!(matches!(&args[0].as_ref(), ConstExpr(_)))
+                        assert!(matches!(&args[0], ConstExpr(_)))
                     }
                     _ => panic!("Inner argument must be a fuction")
                 }

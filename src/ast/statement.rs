@@ -10,7 +10,7 @@ pub enum Statement {
     /// A statement of the type `expr;'
     SimpleStatement(Expr),
     /// A block of {statement}
-    CompoundStatement(Vec<Box<Statement>>),
+    CompoundStatement(Vec<Statement>),
     /// A return statement, for functions
     Return(Expr),
     /// If statement

@@ -15,7 +15,7 @@ pub enum Expr {
     BinaryExpr(Box<Expr>, Op, Box<Expr>),
     AssignmentExpr(String, Box<Expr>),
     IdentExpr(String),
-    FunctionCall(String, Vec<Box<Expr>>),
+    FunctionCall(String, Vec<Expr>),
 }
 
 impl Expr {
