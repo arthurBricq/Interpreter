@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Comma, Constant, Else, Equal, Fn, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
+use crate::token::Token::{Comma, Constant, Else, Equal, False, Fn, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp, True};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -26,7 +26,9 @@ pub enum Token {
     Return,
     Fn,
     If,
-    Else
+    Else,
+    True,
+    False
 }
 
 pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
@@ -73,6 +75,8 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
                 "fn" => Fn,
                 "if" => If,
                 "else" => Else,
+                "true" => True,
+                "false" => False,
                 &_ => Ident(tmp)
             });
             continue;

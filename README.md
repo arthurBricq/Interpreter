@@ -63,9 +63,9 @@ MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), Unknow
     
 **Next milestone** : Typing - Support float, integers, bool and string
 
+- [ ] bool
 - [ ] integer
 - [ ] float
-- [ ] bool
 - [ ] string
 
 **Next milestone**: functions and logic
