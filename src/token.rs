@@ -34,7 +34,7 @@ pub enum Token {
 pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
     let mut tokens = vec![];
 
-    let mut chars = input.chars();
+    let mut chars = input.chars().peekable();
     let mut ch = chars.next();
 
     loop {

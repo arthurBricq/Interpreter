@@ -4,14 +4,15 @@ This project is an interpreter for a programming that I created.
 
 I did this language only to **learn more about programming language theory and intepreters** ! 
 
-Features of the language
+## Features of the language
+
 - C-like differentiation of expressions and statements
-- Functions
-- If, Else, 
-- Typed variables
+- Python-like typed variables
+- Python-like functions
+- If, Else, Loops
+- All common math operation supported
 
-
-# Shell-like intrepreter
+# Shell-like interpreter
 
 - Operation on integers: +, -, *, /
 - Python-like assignment
@@ -64,19 +65,21 @@ MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), Unknow
 - new operators: 
     - ** for power
     - % for modulo
+    - == for equality test
+    - `<`
+    - `>`
     
 **Next milestone** : Typing - Support float, integers, bool and string
 
-- [ ] create a type system
-- [ ] bool
-- [ ] integer
+- [x] create a type system
+- [x] bool
+- [x] integer
 - [ ] float
 - [ ] string
 
 **Next milestone**: functions and logic
 
 - [ ] loop + break
-- [ ] typed functions
 
 **Next milestone**: web-assembly deployment of the shell
 
