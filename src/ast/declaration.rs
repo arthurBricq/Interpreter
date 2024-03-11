@@ -137,5 +137,11 @@ fn recursive(n) {
         let mut inputs = HashMap::new();
         inputs.insert("n".to_string(), Value::IntValue(0));
         assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
+        
+        inputs.insert("n".to_string(), Value::IntValue(1));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
+        
+        inputs.insert("n".to_string(), Value::IntValue(10));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
     }
 }
