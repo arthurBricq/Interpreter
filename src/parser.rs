@@ -1,7 +1,7 @@
 use crate::ast::declaration::{Declaration, FnArg};
 use crate::ast::declaration::Declaration::Function;
 use crate::ast::expression::Expr;
-use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
 use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::ast::statement::Statement;
 use crate::ast::statement::Statement::{CompoundStatement, If};
@@ -31,7 +31,7 @@ impl<'a> Parser<'a> {
             Ok(assign)
         } else if let Some(tmp) = self.parse_function_call_expr() {
             Ok(tmp)
-        } else if let Some(tmp) = self.parse_additive_expr() {
+        } else if let Some(tmp) = self.parse_comparison_expr() {
             Ok(tmp)
         } else {
             Err(UnknownSyntax)
@@ -264,14 +264,13 @@ impl<'a> Parser<'a> {
     
     /// Parse boolean operators, such as '==', '<', '>'
     fn parse_comparison_expr(&mut self) -> Option<Expr> {
-        /*
         let checkpoint = self.index;
         if let Some(left) = self.parse_additive_expr() {
-            if let Some(Token::TokenOp(y @ Op::Plus) | Token::TokenOp(y @ Op::Minus)) = self.peek()
+            if let Some(Token::TokenComp(cmp)) = self.peek()
             {
                 self.index += 1;
                 if let Some(right) = self.parse_comparison_expr() {
-                    return Some(BinaryExpr(Box::new(left), y, Box::new(right)));
+                    return Some(CompareExpr(Box::new(left), cmp, Box::new(right)));
                 }
             }
             else {
@@ -279,7 +278,6 @@ impl<'a> Parser<'a> {
             }
         }
         self.set_index(checkpoint);
-         */
         None
     }
 
@@ -630,12 +628,29 @@ fn my_func_name() {
     }
     
     #[test]
-    fn test_parse_bool_comparison() {
+    fn test_parse_bool_comparison_equal() {
         let text = "a == true";
         let tokens = tokenize(&text.to_string()).unwrap();
         let mut parser = Parser::new(&tokens);
-        let ast = parser.parse_expression();
-        println!("{ast:?}");
-        // assert!(matches!(ast[0], ))
+        let ast = parser.parse_expression().unwrap();
+        assert!(matches!(ast, Expr::CompareExpr(_, Comp::Equal, _)))
+    }
+
+    #[test]
+    fn test_parse_bool_comparison_higher() {
+        let text = "a > 1";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression().unwrap();
+        assert!(matches!(ast, Expr::CompareExpr(_, Comp::Higher, _)))
+    }
+    
+    #[test]
+    fn test_parse_bool_comparison_higher_eq() {
+        let text = "a >= 1";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression().unwrap();
+        assert!(matches!(ast, Expr::CompareExpr(_, Comp::HigherEq, _)))
     }
 }

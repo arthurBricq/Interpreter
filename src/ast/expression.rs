@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use crate::ast::declaration::Declaration;
-use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, FunctionCall, IdentExpr, ParenthesisExpr};
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, ParenthesisExpr};
 use crate::ast::expression::Value::IntValue;
 use crate::error::EvalError;
 use crate::error::EvalError::{MultipleError, UnknownVariable};
 use crate::module::Module;
-use crate::token::Op;
+use crate::token::{Comp, Op};
 
 /// A value is the result of an evaluation
 /// It can be None, if there is no value
@@ -23,6 +23,7 @@ pub enum Expr {
     NegExpr(Box<Expr>),
     ParenthesisExpr(Box<Expr>),
     BinaryExpr(Box<Expr>, Op, Box<Expr>),
+    CompareExpr(Box<Expr>, Comp, Box<Expr>),
     AssignmentExpr(String, Box<Expr>),
     IdentExpr(String),
     FunctionCall(String, Vec<Expr>),
@@ -47,12 +48,14 @@ impl Expr {
                     Op::Minus => l - r,
                     Op::Times => l * r,
                     Op::Div => l / r,
-                    _ => todo!("other operators")
                 })),
                 (Err(r), Ok(_)) => Err(r),
                 (Ok(_), Err(err)) => Err(err),
                 (Err(err1), Err(err2)) => Err(MultipleError(vec![Box::new(err1), Box::new(err2)])),
                 _ => panic!("Not sure what is happening... You will have to debug this :'(")
+            }
+            CompareExpr(l, cmp, r) => {
+                panic!("not implemented")
             }
             AssignmentExpr(name, value) => {
                 let eval = value.eval(buf, module);
