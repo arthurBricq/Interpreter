@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::io::read_to_string;
 
 use crate::ast::expression::{Expr, Value};
 use crate::error::EvalError;
@@ -51,20 +52,24 @@ impl Statement {
                 Ok(Value::None)
             }
             Statement::If(condition, body, else_statement)  => {
-                if let Ok(cond) =  condition.eval(inputs, module) {
-                    let test = match cond {
-                        Value::IntValue(i) => i != 0,
-                        Value::BoolValue(b) => b,
-                        Value::None => false
-                    };
-                    
-                    if test {
-                        return body.eval(inputs, module)
-                    } else if let Some(else_body) = else_statement {
-                        return else_body.eval(inputs, module)
+                match condition.eval(inputs, module) {
+                    Ok(cond) => {
+                        let test = match cond {
+                            Value::IntValue(i) => i != 0,
+                            Value::BoolValue(b) => b,
+                            Value::None => false
+                        };
+
+                        if test {
+                            body.eval(inputs, module)
+                        } else if let Some(else_body) = else_statement {
+                            else_body.eval(inputs, module)
+                        } else { 
+                            Ok(Value::None)
+                        }
                     }
-                };
-                Ok(Value::None)
+                    Err(err) => Err(err)
+                }
             }
         }
     }
@@ -130,6 +135,17 @@ fn main() {
         let ast = parse_statements(&tokens.unwrap());
         let statement = &ast[0];
         assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Value::IntValue(4)))
+    }
+    
+    #[test]
+    fn test_if_evaluation_with_undefined_var() {
+        let text = "if (n) {return 3;}";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        let statement = &ast[0];
+        let result = statement.eval(&mut HashMap::new(), None);
+        println!("{result:?}");
+        assert!(matches!(result, Err(_)))
     }
 
 }

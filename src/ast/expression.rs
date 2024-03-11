@@ -1,12 +1,12 @@
 use std::collections::HashMap;
+
 use crate::ast::declaration::Declaration;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, ParenthesisExpr};
 use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::error::EvalError;
 use crate::error::EvalError::{MultipleError, UnknownVariable};
 use crate::module::Module;
-use crate::parser::Parser;
-use crate::token::{Comp, Op, tokenize};
+use crate::token::{Comp, Op};
 
 /// A value is the result of an evaluation
 /// It can be None, if there is no value
@@ -112,6 +112,7 @@ impl Expr {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+
     use crate::ast::expression::Value;
     use crate::ast::expression::Value::BoolValue;
     use crate::error::EvalError;

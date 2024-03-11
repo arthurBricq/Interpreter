@@ -92,4 +92,18 @@ mod tests {
         let result = returns_false.eval(&mut HashMap::new(), Some(&module));
         assert_eq!(result, Ok(BoolValue(false)));
     }
+    
+    #[test]
+    fn test_fibonnaci_function() {
+        let text = std::fs::read_to_string("TestData/fibonacci.txt").unwrap();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let func = parser.parse_declaration();
+        println!("{func:?}")
+        
+        // let module = parser.parse_module();
+        // println!("{module:?}");
+        // let func = module.get_function(&"fib".to_string()).unwrap();
+        // println!("{func:?}")
+    }
 }

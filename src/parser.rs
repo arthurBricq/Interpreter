@@ -79,7 +79,7 @@ impl<'a> Parser<'a> {
 
 
     /// Parse any kind of declaration
-    fn parse_declaration(&mut self) -> Result<Option<Declaration>, ParserError> {
+    pub fn parse_declaration(&mut self) -> Result<Option<Declaration>, ParserError> {
         self.parse_one_function()
     }
 
@@ -653,4 +653,5 @@ fn my_func_name() {
         let ast = parser.parse_expression().unwrap();
         assert!(matches!(ast, Expr::CompareExpr(_, Comp::HigherEq, _)))
     }
+
 }

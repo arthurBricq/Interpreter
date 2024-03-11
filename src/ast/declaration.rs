@@ -34,6 +34,7 @@ impl Declaration {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use crate::ast::expression::Value;
     use crate::ast::expression::Value::IntValue;
 
     use crate::parser::Parser;
@@ -107,5 +108,34 @@ fn main() {
         let result = module.run();
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), IntValue(1));
+    }
+
+    
+    #[test]
+    fn test_error_when_not_passing_argument() {
+        let text = crate::parser::tests::get_simple_file();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        let pass = module.get_function(&"passthrough".to_string()).unwrap();
+        assert!(matches!(pass.eval(&mut HashMap::new(), Some(&module)), Err(_)));
+    }
+    
+    
+    #[test]
+    fn test_recursive_function() {
+        let text = "\
+fn recursive(n) {
+    if (n == 0) {return 0;}
+    return recursive(n - 1);
+}
+        ";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        let func = module.get_function(&"recursive".to_string()).unwrap();
+        let mut inputs = HashMap::new();
+        inputs.insert("n".to_string(), Value::IntValue(0));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
     }
 }

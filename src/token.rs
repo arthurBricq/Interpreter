@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Comma, Integer, Else, Equal, False, Fn, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp, True, TokenComp};
+use crate::token::Token::{Comma, Else, Equal, False, Fn, Ident, If, Integer, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenComp, TokenOp, True};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -141,10 +141,9 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
 
 #[cfg(test)]
 mod tests {
+    use crate::token::{Comp, Token, tokenize};
     use crate::token::Op::{Div, Minus, Plus, Times};
-    use crate::token::{tokenize, Token, Op, Comp};
-
-    use crate::token::Token::{Integer, Equal, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp, TokenComp};
+    use crate::token::Token::{Equal, Ident, If, Integer, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenComp, TokenOp};
 
     fn assert_tokens(text: &str, tokens: Vec<Token>) {
         let computed = tokenize(&text.to_string()).unwrap();
