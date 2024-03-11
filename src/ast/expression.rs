@@ -1,15 +1,16 @@
 use std::collections::HashMap;
 use crate::ast::declaration::Declaration;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, ParenthesisExpr};
-use crate::ast::expression::Value::IntValue;
+use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::error::EvalError;
 use crate::error::EvalError::{MultipleError, UnknownVariable};
 use crate::module::Module;
-use crate::token::{Comp, Op};
+use crate::parser::Parser;
+use crate::token::{Comp, Op, tokenize};
 
 /// A value is the result of an evaluation
 /// It can be None, if there is no value
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Value {
     IntValue(i64),
     BoolValue(bool),
@@ -55,7 +56,11 @@ impl Expr {
                 _ => panic!("Not sure what is happening... You will have to debug this :'(")
             }
             CompareExpr(l, cmp, r) => {
-                panic!("not implemented")
+                match (l.eval(buf, module), r.eval(buf, module)) {
+                    (Ok(left), Ok(right)) => Ok(Self::eval_compare_expr(&left, cmp, &right)),
+                    (Err(r), _) => Err(r),
+                    (_, Err(r)) => Err(r),
+                }
             }
             AssignmentExpr(name, value) => {
                 let eval = value.eval(buf, module);
@@ -91,4 +96,61 @@ impl Expr {
             }
         }
     }
+
+    fn eval_compare_expr(left: &Value, op: &Comp, right: &Value) -> Value {
+        match op {
+            Comp::Equal => BoolValue(left == right),
+            Comp::Lower => BoolValue(left < right),
+            Comp::LowerEq => BoolValue(left <= right),
+            Comp::Higher => BoolValue(left > right),
+            Comp::HigherEq => BoolValue(left >= right)
+        }
+    }
+
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+    use crate::ast::expression::Value;
+    use crate::ast::expression::Value::BoolValue;
+    use crate::error::EvalError;
+    use crate::parser::Parser;
+    use crate::token::tokenize;
+
+    fn assert_expression_evaluation(text: &str, expected: Result<Value, EvalError>) {
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression().unwrap();
+        let result = ast.eval(&mut HashMap::new(), None);
+        assert_eq!(result, expected);
+    }
+    
+    #[test]
+    fn test_parse_bool_comparison() {
+        // test ==
+        assert_expression_evaluation("1 == 1", Ok(BoolValue(true)));
+        assert_expression_evaluation("1 == 2", Ok(BoolValue(false)));
+        assert_expression_evaluation("2 == 1", Ok(BoolValue(false)));
+        assert_expression_evaluation("2 == 2", Ok(BoolValue(true)));
+        
+        // test relational
+        assert_expression_evaluation("1 > 1", Ok(BoolValue(false)));
+        assert_expression_evaluation("1 < 1", Ok(BoolValue(false)));
+        assert_expression_evaluation("2 > 1", Ok(BoolValue(true)));
+        assert_expression_evaluation("2 < 1", Ok(BoolValue(false)));
+        assert_expression_evaluation("1 >= 1", Ok(BoolValue(true)));
+        assert_expression_evaluation("1 <= 1", Ok(BoolValue(true)));
+        
+    }
+    
+    #[test]
+    fn test_parse_bool_comparison_order_of_operation() {
+        assert_expression_evaluation("1 + 1 == 2", Ok(BoolValue(true)));
+        assert_expression_evaluation("(1 + 1) == 2", Ok(BoolValue(true)));
+        assert_expression_evaluation("(1 + 1) == 2 * 1", Ok(BoolValue(true)));
+        assert_expression_evaluation("(1 + 1) * 2 == 2 * 2", Ok(BoolValue(true)));
+        assert_expression_evaluation("(1 + 1) * 2 + 2 == 6", Ok(BoolValue(true)));
+    }
+    
 }
