@@ -27,8 +27,10 @@ impl Module {
 
     /// Evaluate the `main` function
     pub fn run(&self) -> Result<Value, EvalError> {
-        let main = self.get_function(&"main".to_string()).unwrap();
-        main.eval(&mut HashMap::new(), Some(&self))
+        match self.get_function(&"main".to_string()) {
+            None => Err(EvalError::Error("Function main not found")),
+            Some(main) => main.eval(&mut HashMap::new(), Some(&self))
+        }
     }
 
     pub fn debug(&self) {

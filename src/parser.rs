@@ -199,6 +199,7 @@ impl<'a> Parser<'a> {
             // TODO error handling
             return None;
         }
+        
         // Parse simple statement
         if let Ok(expr) = self.parse_expression() {
             if let Some(Token::SemiColon) = self.peek() {
@@ -206,6 +207,7 @@ impl<'a> Parser<'a> {
                 return Some(Statement::SimpleStatement(expr));
             }
         }
+        
         // Parse compound statement
         if let Some(compound) = self.parse_compound_statement() {
             return Some(compound)
@@ -671,5 +673,5 @@ fn my_func_name() {
         let ast = parser.parse_expression().unwrap();
         assert!(matches!(ast, BinaryExpr(_, _, _)))
     }
-
+    
 }

@@ -144,7 +144,7 @@ fn recursive(n) {
         inputs.insert("n".to_string(), Value::IntValue(10));
         assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
     }
-    
+
     #[test]
     fn test_sum_of_function_call() {
         let text = "\
@@ -153,14 +153,15 @@ fn foo(n) {
 }
 
 fn main() {
-    let a = foo(1) + foo(2);
-    return a;
+    return foo(1) + foo(2);
 }
         ";
         let tokens = tokenize(&text.to_string()).unwrap();
         let mut parser = Parser::new(&tokens);
         let module = parser.parse_module();
+        println!("{module:?}");
         let result = module.run();
         println!("{result:?}");
+        assert_eq!(result, Ok(IntValue(6)));
     }
 }
