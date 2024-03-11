@@ -1,8 +1,10 @@
-# Basic interpreter in Rust
+# Interpreter of ABR language
 
-This project is an interpreter for a programming that I created. 
+This project is an interpreter for a programming language that I created: the **ABr** language
 
-I did this language only to **learn more about programming language theory and intepreters** ! 
+ABR = **A**rthur **Br**icq
+
+Don't get it wrong. This is just a learning tool ! I did this language only to **learn more about programming language theory and intepreters**.
 
 ## Features of the language
 
@@ -19,6 +21,15 @@ fn fib(n) {
   return fib(n-1) + fib(n-2);
 }
 ```
+
+## Missing features
+
+These features are missing for ABr to be 'ready'
+
+- Loops
+- Arrays
+- Vectors
+- || and &&
 
 # Shell-like interpreter
 
