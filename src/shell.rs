@@ -57,7 +57,6 @@ impl Shell {
                         match self.eval(&ast) {
                             Ok(value) => println!("{value:?}"),
                             Err(e) => println!("{} {e:?}", "Error while evaluating: ".red()),
-                            _ => {}
                         }
                     }
                     Err(e) => println!("{} {e:?}", "Error while parsing: ".red()),

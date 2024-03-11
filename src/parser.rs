@@ -262,8 +262,25 @@ impl<'a> Parser<'a> {
         None
     }
     
+    /// Parse boolean operators, such as '==', '<', '>'
     fn parse_comparison_expr(&mut self) -> Option<Expr> {
-       None 
+        /*
+        let checkpoint = self.index;
+        if let Some(left) = self.parse_additive_expr() {
+            if let Some(Token::TokenOp(y @ Op::Plus) | Token::TokenOp(y @ Op::Minus)) = self.peek()
+            {
+                self.index += 1;
+                if let Some(right) = self.parse_comparison_expr() {
+                    return Some(BinaryExpr(Box::new(left), y, Box::new(right)));
+                }
+            }
+            else {
+                return Some(left);
+            }
+        }
+        self.set_index(checkpoint);
+         */
+        None
     }
 
     /// Matches "Mul Expr +/- Mul Expr"

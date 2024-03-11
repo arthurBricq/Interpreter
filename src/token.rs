@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Comma, Integer, Else, Equal, False, Fn, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp, True};
+use crate::token::Token::{Comma, Integer, Else, Equal, False, Fn, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp, True, TokenComp};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -9,7 +9,10 @@ pub enum Op {
     Minus,
     Times,
     Div,
-    /// Comparison
+}
+
+#[derive(Eq, PartialEq, Debug, Clone)]
+pub enum Comp {
     Equal,
     Lower,
     LowerEq,
@@ -20,6 +23,7 @@ pub enum Op {
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Token {
     TokenOp(Op),
+    TokenComp(Comp),
     Ident(String),
     Integer(i64),
     Equal,
@@ -100,7 +104,7 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             '=' => {
                 if let Some(&'=') = chars.peek() {
                     chars.next();
-                    tokens.push(TokenOp(Op::Equal))
+                    tokens.push(TokenComp(Comp::Equal))
                 } else {
                     tokens.push(Equal)
                 }
@@ -108,17 +112,17 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             '<' => {
                 if let Some(&'=') = chars.peek() {
                     chars.next();
-                    tokens.push(TokenOp(Op::LowerEq))
+                    tokens.push(TokenComp(Comp::LowerEq))
                 } else {
-                    tokens.push(TokenOp(Op::Lower))
+                    tokens.push(TokenComp(Comp::Lower))
                 }
             }
             '>' => {
                 if let Some(&'=') = chars.peek() {
                     chars.next();
-                    tokens.push(TokenOp(Op::HigherEq))
+                    tokens.push(TokenComp(Comp::HigherEq))
                 } else {
-                    tokens.push(TokenOp(Op::Higher))
+                    tokens.push(TokenComp(Comp::Higher))
                 }
             }
             ';' => tokens.push(SemiColon),
@@ -138,9 +142,9 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
 #[cfg(test)]
 mod tests {
     use crate::token::Op::{Div, Minus, Plus, Times};
-    use crate::token::{tokenize, Token, Op};
+    use crate::token::{tokenize, Token, Op, Comp};
 
-    use crate::token::Token::{Integer, Equal, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
+    use crate::token::Token::{Integer, Equal, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp, TokenComp};
 
     fn assert_tokens(text: &str, tokens: Vec<Token>) {
         let computed = tokenize(&text.to_string()).unwrap();
@@ -205,12 +209,12 @@ mod tests {
     fn test_parse_double_char_operrators() {
         assert_tokens(
             "==",
-            vec![TokenOp(Op::Equal)],
+            vec![TokenComp(Comp::Equal)],
         );
         
         assert_tokens(
             "1 == 2",
-            vec![Integer(1), TokenOp(Op::Equal), Integer(2)],
+            vec![Integer(1), TokenComp(Comp::Equal), Integer(2)],
         );
         
         assert_tokens(
@@ -220,12 +224,12 @@ mod tests {
         
         assert_tokens(
             "1 < 2",
-            vec![Integer(1), TokenOp(Op::Lower), Integer(2)],
+            vec![Integer(1), TokenComp(Comp::Lower), Integer(2)],
         );
         
         assert_tokens(
             "1 <= 2",
-            vec![Integer(1), TokenOp(Op::LowerEq), Integer(2)],
+            vec![Integer(1), TokenComp(Comp::LowerEq), Integer(2)],
         );
     }
 }
