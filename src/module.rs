@@ -100,12 +100,37 @@ mod tests {
         let text = std::fs::read_to_string("TestData/fibonacci.txt").unwrap();
         let tokens = tokenize(&text).unwrap();
         let mut parser = Parser::new(&tokens);
-        let func = parser.parse_declaration();
-        println!("{func:?}")
         
-        // let module = parser.parse_module();
-        // println!("{module:?}");
-        // let func = module.get_function(&"fib".to_string()).unwrap();
-        // println!("{func:?}")
+        let mut inputs = HashMap::new();
+        
+        let module = parser.parse_module();
+        let func = module.get_function(&"fib".to_string()).unwrap();
+
+        inputs.insert("n".to_string(), IntValue(0));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
+        
+        inputs.insert("n".to_string(), IntValue(1));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(1)));
+        
+        inputs.insert("n".to_string(), IntValue(2));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(1)));
+
+        inputs.insert("n".to_string(), IntValue(3));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(2)));
+
+        inputs.insert("n".to_string(), IntValue(4));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(3)));
+
+        inputs.insert("n".to_string(), IntValue(5));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(5)));
+
+        inputs.insert("n".to_string(), IntValue(6));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(8)));
+
+        inputs.insert("n".to_string(), IntValue(10));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(55)));
+
+        inputs.insert("n".to_string(), IntValue(15));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(610)));
     }
 }
