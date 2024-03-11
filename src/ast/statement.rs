@@ -147,5 +147,16 @@ fn main() {
         println!("{result:?}");
         assert!(matches!(result, Err(_)))
     }
+    
+    #[test]
+    fn test_return_statement_with_addition() {
+        let text = "{return 1 + 1}";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        let statement = &ast[0];
+        let result = statement.eval(&mut HashMap::new(), None);
+        println!("{result:?}");
+        assert_eq!(result, Ok(Value::IntValue(2)));
+    }
 
 }

@@ -654,4 +654,13 @@ fn my_func_name() {
         assert!(matches!(ast, Expr::CompareExpr(_, Comp::HigherEq, _)))
     }
 
+    #[test]
+    fn test_parse_multiple_function_call() {
+        let text = "foo(1) + bar(2)";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression().unwrap();
+        assert!(matches!(ast, BinaryExpr(_, _, _)))
+    }
+
 }

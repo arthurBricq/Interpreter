@@ -110,7 +110,7 @@ fn main() {
         assert_eq!(result.unwrap(), IntValue(1));
     }
 
-    
+
     #[test]
     fn test_error_when_not_passing_argument() {
         let text = crate::parser::tests::get_simple_file();
@@ -120,8 +120,8 @@ fn main() {
         let pass = module.get_function(&"passthrough".to_string()).unwrap();
         assert!(matches!(pass.eval(&mut HashMap::new(), Some(&module)), Err(_)));
     }
-    
-    
+
+
     #[test]
     fn test_recursive_function() {
         let text = "\
@@ -137,11 +137,29 @@ fn recursive(n) {
         let mut inputs = HashMap::new();
         inputs.insert("n".to_string(), Value::IntValue(0));
         assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
-        
+
         inputs.insert("n".to_string(), Value::IntValue(1));
         assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
-        
+
         inputs.insert("n".to_string(), Value::IntValue(10));
         assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
+    }
+    #[test]
+    fn test_sum_of_function_call() {
+        let text = "\
+fn foo(n) {
+    return 2 * n;
+}
+
+fn main() {
+    let a = foo(1) + foo(2);
+    return a;
+}
+        ";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        let result = module.run();
+        println!("{result:?}");
     }
 }
