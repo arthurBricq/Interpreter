@@ -144,6 +144,7 @@ fn recursive(n) {
         inputs.insert("n".to_string(), Value::IntValue(10));
         assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
     }
+    
     #[test]
     fn test_sum_of_function_call() {
         let text = "\

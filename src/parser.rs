@@ -29,8 +29,6 @@ impl<'a> Parser<'a> {
     pub fn parse_expression(&mut self) -> Result<Expr, ParserError> {
         if let Some(assign) = self.parse_assignment_expr() {
             Ok(assign)
-        } else if let Some(tmp) = self.parse_function_call_expr() {
-            Ok(tmp)
         } else if let Some(tmp) = self.parse_comparison_expr() {
             Ok(tmp)
         } else {
@@ -332,11 +330,18 @@ impl<'a> Parser<'a> {
             self.index += 1;
             return Some(ConstExpr(BoolValue(false)));
         }
+
+        // Function call
+        if let Some(expr) = self.parse_function_call_expr() {
+            return Some(expr)
+        }
+        
         // Identifier
         if let Some(Token::Ident(s)) = self.peek() {
             self.index += 1;
             return Some(IdentExpr(s));
         }
+        
         // Parenthesis
         let checkpoint = self.index;
         if let Some(Token::LPar) = self.consume() {
@@ -347,6 +352,7 @@ impl<'a> Parser<'a> {
             }
         }
         self.set_index(checkpoint);
+        
         // - Something
         if let Some(Token::TokenOp(Op::Minus)) = self.peek() {
             self.index += 1;
@@ -354,6 +360,9 @@ impl<'a> Parser<'a> {
                 return Some(NegExpr(Box::new(expr)));
             }
         }
+
+        
+        // Default case
         None
     }
 }
