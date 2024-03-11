@@ -1,6 +1,6 @@
 use crate::ast::declaration::{Declaration, FnArg};
 use crate::ast::declaration::Declaration::Function;
-use crate::ast::expression::{Expr, Value};
+use crate::ast::expression::Expr;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
 use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::ast::statement::Statement;
@@ -261,6 +261,10 @@ impl<'a> Parser<'a> {
         self.set_index(checkpoint);
         None
     }
+    
+    fn parse_comparison_expr(&mut self) -> Option<Expr> {
+       None 
+    }
 
     /// Matches "Mul Expr +/- Mul Expr"
     fn parse_additive_expr(&mut self) -> Option<Expr> {
@@ -272,7 +276,8 @@ impl<'a> Parser<'a> {
                 if let Some(right) = self.parse_additive_expr() {
                     return Some(BinaryExpr(Box::new(left), y, Box::new(right)));
                 }
-            } else {
+            } 
+            else {
                 return Some(left);
             }
         }
@@ -605,5 +610,15 @@ fn my_func_name() {
             }
             _ => panic!("false")
         }
+    }
+    
+    #[test]
+    fn test_parse_bool_comparison() {
+        let text = "a == true";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression();
+        println!("{ast:?}");
+        // assert!(matches!(ast[0], ))
     }
 }

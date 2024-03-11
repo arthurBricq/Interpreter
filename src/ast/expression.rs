@@ -47,6 +47,7 @@ impl Expr {
                     Op::Minus => l - r,
                     Op::Times => l * r,
                     Op::Div => l / r,
+                    _ => todo!("other operators")
                 })),
                 (Err(r), Ok(_)) => Err(r),
                 (Ok(_), Err(err)) => Err(err),

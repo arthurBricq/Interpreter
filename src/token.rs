@@ -9,6 +9,12 @@ pub enum Op {
     Minus,
     Times,
     Div,
+    /// Comparison
+    Equal,
+    Lower,
+    LowerEq,
+    Higher,
+    HigherEq
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -91,7 +97,30 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             ')' => tokens.push(RPar),
             '{' => tokens.push(LBracket),
             '}' => tokens.push(RBracket),
-            '=' => tokens.push(Equal),
+            '=' => {
+                if let Some(&'=') = chars.peek() {
+                    chars.next();
+                    tokens.push(TokenOp(Op::Equal))
+                } else {
+                    tokens.push(Equal)
+                }
+            },
+            '<' => {
+                if let Some(&'=') = chars.peek() {
+                    chars.next();
+                    tokens.push(TokenOp(Op::LowerEq))
+                } else {
+                    tokens.push(TokenOp(Op::Lower))
+                }
+            }
+            '>' => {
+                if let Some(&'=') = chars.peek() {
+                    chars.next();
+                    tokens.push(TokenOp(Op::HigherEq))
+                } else {
+                    tokens.push(TokenOp(Op::Higher))
+                }
+            }
             ';' => tokens.push(SemiColon),
             ',' => tokens.push(Comma),
             ' ' | '\r' | '\t' | '\n' => {}
@@ -109,7 +138,7 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
 #[cfg(test)]
 mod tests {
     use crate::token::Op::{Div, Minus, Plus, Times};
-    use crate::token::{tokenize, Token};
+    use crate::token::{tokenize, Token, Op};
 
     use crate::token::Token::{Integer, Equal, Ident, If, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenOp};
 
@@ -169,6 +198,34 @@ mod tests {
         assert_tokens(
             "if (1) { return 1; }",
             vec![If, LPar, Integer(1), RPar, LBracket, Return, Integer(1), SemiColon, RBracket],
+        );
+    }
+    
+    #[test]
+    fn test_parse_double_char_operrators() {
+        assert_tokens(
+            "==",
+            vec![TokenOp(Op::Equal)],
+        );
+        
+        assert_tokens(
+            "1 == 2",
+            vec![Integer(1), TokenOp(Op::Equal), Integer(2)],
+        );
+        
+        assert_tokens(
+            "1 = 2",
+            vec![Integer(1), Equal, Integer(2)],
+        );
+        
+        assert_tokens(
+            "1 < 2",
+            vec![Integer(1), TokenOp(Op::Lower), Integer(2)],
+        );
+        
+        assert_tokens(
+            "1 <= 2",
+            vec![Integer(1), TokenOp(Op::LowerEq), Integer(2)],
         );
     }
 }
