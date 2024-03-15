@@ -1,4 +1,4 @@
-# Interpreter of ABR language
+# Interpreter of ABr language
 
 This project is an interpreter for a programming language that I created: the **ABr** language
 
@@ -18,7 +18,7 @@ Don't get it wrong. This is just a learning tool ! I did this language only to *
 fn fib(n) {
   if (n == 0) {return 0;}
   if (n == 1) {return 1;}
-  return fib(n-1) + fib(n-2);
+  return fib(n-1) + fib(n-);
 }
 ```
 
@@ -27,8 +27,9 @@ fn fib(n) {
 These features are missing for ABr to be 'ready'
 
 - Loops
-- Arrays
-- Vectors
+- List
+  - Creation: `a = [1,2,3];`
+  - Access  : `a[2]`
 - || and &&
 
 # Shell-like interpreter

@@ -218,7 +218,7 @@ impl<'a> Parser<'a> {
     /// Parse all the statements included inside a { block }
     fn parse_compound_statement(&mut self) -> Option<Statement> {
         let checkpoint = self.index;
-        if let Some(Token::LBracket) = self.peek() {
+        if let Some(Token::LBrace) = self.peek() {
             self.index += 1;
             let mut statements = vec![];
             while let Some(stm) = self.parse_one_statement() {
@@ -226,7 +226,7 @@ impl<'a> Parser<'a> {
             }
             // Once there are no more statement being parsed, try to parse
             // a closing parenthesis.
-            if let Some(Token::RBracket) = self.peek() {
+            if let Some(Token::RBrace) = self.peek() {
                 self.index += 1;
                 return Some(CompoundStatement(statements));
             }

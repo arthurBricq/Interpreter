@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Comma, Else, Equal, False, Fn, Ident, If, Integer, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenComp, TokenOp, True};
+use crate::token::Token::{Comma, Else, Equal, False, Fn, Ident, If, Integer, LBrace, LPar, RBrace, Return, RPar, SemiColon, TokenComp, TokenOp, True};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -29,7 +29,7 @@ pub enum Token {
     Equal,
     /// Symbols
     LPar, RPar,
-    LBracket, RBracket,
+    LBrace, RBrace,
     SemiColon,
     Comma,
     /// Keywords
@@ -99,8 +99,8 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             '*' => tokens.push(TokenOp(Times)),
             '(' => tokens.push(LPar),
             ')' => tokens.push(RPar),
-            '{' => tokens.push(LBracket),
-            '}' => tokens.push(RBracket),
+            '{' => tokens.push(LBrace),
+            '}' => tokens.push(RBrace),
             '=' => {
                 if let Some(&'=') = chars.peek() {
                     chars.next();
@@ -143,7 +143,7 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
 mod tests {
     use crate::token::{Comp, Token, tokenize};
     use crate::token::Op::{Div, Minus, Plus, Times};
-    use crate::token::Token::{Equal, Ident, If, Integer, LBracket, LPar, RBracket, Return, RPar, SemiColon, TokenComp, TokenOp};
+    use crate::token::Token::{Equal, Ident, If, Integer, LBrace, LPar, RBrace, Return, RPar, SemiColon, TokenComp, TokenOp};
 
     fn assert_tokens(text: &str, tokens: Vec<Token>) {
         let computed = tokenize(&text.to_string()).unwrap();
@@ -192,7 +192,7 @@ mod tests {
         );
         assert_tokens(
             "{1+1;}",
-            vec![LBracket, Integer(1), TokenOp(Plus), Integer(1), SemiColon, RBracket],
+            vec![LBrace, Integer(1), TokenOp(Plus), Integer(1), SemiColon, RBrace],
         );
         assert_tokens(
             "return 1;",
@@ -200,7 +200,7 @@ mod tests {
         );
         assert_tokens(
             "if (1) { return 1; }",
-            vec![If, LPar, Integer(1), RPar, LBracket, Return, Integer(1), SemiColon, RBracket],
+            vec![If, LPar, Integer(1), RPar, LBrace, Return, Integer(1), SemiColon, RBrace],
         );
     }
     
