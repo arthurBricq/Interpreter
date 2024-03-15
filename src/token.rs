@@ -1,7 +1,7 @@
 use crate::error::TokenError;
 use crate::error::TokenError::UnknownChar;
 use crate::token::Op::{Div, Minus, Plus, Times};
-use crate::token::Token::{Comma, Else, Equal, False, Fn, Ident, If, Integer, LBrace, LPar, RBrace, Return, RPar, SemiColon, TokenComp, TokenOp, True};
+use crate::token::Token::{Comma, Else, Equal, False, Fn, Ident, If, Integer, LBrace, LBracket, LPar, RBrace, RBracket, Return, RPar, SemiColon, TokenComp, TokenOp, True};
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Op {
@@ -30,6 +30,7 @@ pub enum Token {
     /// Symbols
     LPar, RPar,
     LBrace, RBrace,
+    LBracket, RBracket,
     SemiColon,
     Comma,
     /// Keywords
@@ -101,6 +102,8 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             ')' => tokens.push(RPar),
             '{' => tokens.push(LBrace),
             '}' => tokens.push(RBrace),
+            '[' => tokens.push(LBracket),
+            ']' => tokens.push(RBracket),
             '=' => {
                 if let Some(&'=') = chars.peek() {
                     chars.next();
