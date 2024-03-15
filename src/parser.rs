@@ -1,7 +1,7 @@
 use crate::ast::declaration::{Declaration, FnArg};
 use crate::ast::declaration::Declaration::Function;
 use crate::ast::expression::Expr;
-use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, NegExpr, ParenthesisExpr};
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, NegExpr, ParenthesisExpr};
 use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::ast::statement::Statement;
 use crate::ast::statement::Statement::{CompoundStatement, If};
@@ -256,7 +256,10 @@ impl<'a> Parser<'a> {
         if let Some(Token::Ident(name)) = self.peek() {
             self.index += 1;
             // Try to parse an argument list
-            if let Some(arguments) = self.parse_expr_list(|token| matches!(token, Some(Token::LPar)), |token| matches!(token, Some(Token::RPar))) {
+            if let Some(arguments) = self.parse_expr_list(
+                |token| matches!(token, Some(Token::LPar)), 
+                |token| matches!(token, Some(Token::RPar))
+            ) {
                 return Some(FunctionCall(name, arguments));
             }
         }
@@ -266,8 +269,11 @@ impl<'a> Parser<'a> {
 
     fn parse_list_expr(&mut self) -> Option<Expr> {
         let checkpoint = self.index;
-        if let Some(Token::LBracket) = self.peek() {
-            self.index += 1;
+        if let Some(arguments) = self.parse_expr_list(
+            |token| matches!(token, Some(Token::LBracket)),
+            |token| matches!(token, Some(Token::RBracket))
+        ) {
+            return Some(List(arguments));
         }
         self.set_index(checkpoint);
         None
@@ -352,6 +358,11 @@ impl<'a> Parser<'a> {
             self.index += 1;
             return Some(IdentExpr(s));
         }
+        
+        // List
+        if let Some(expr) = self.parse_list_expr() {
+            return Some(expr);
+        }
 
         // Parenthesis
         let checkpoint = self.index;
@@ -363,8 +374,6 @@ impl<'a> Parser<'a> {
             }
         }
         self.set_index(checkpoint);
-
-        // List
 
         // - Something
         if let Some(Token::TokenOp(Op::Minus)) = self.peek() {
@@ -407,7 +416,7 @@ pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
 pub(crate) mod tests {
     use crate::ast::declaration::Declaration;
     use crate::ast::expression::{Expr, Value};
-    use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr};
+    use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, List};
     use crate::ast::expression::Value::IntValue;
     use crate::ast::statement::Statement;
     use crate::ast::statement::Statement::SimpleStatement;
@@ -682,5 +691,34 @@ fn my_func_name() {
         let mut parser = Parser::new(&tokens);
         let ast = parser.parse_expression().unwrap();
         assert!(matches!(ast, BinaryExpr(_, _, _)))
+    }
+    
+    #[test]
+    fn test_parse_simple_list() {
+        let text = "[1,2,3]";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression();
+        println!("{ast:?}");
+        match ast.unwrap() {
+            List(values) => {
+                assert_eq!(3, values.len());
+            }
+            _ => {assert!(false)}
+        }
+    }
+    #[test]
+    fn test_parse_list_with_expression() {
+        let text = "[1+1,(2)*3,foo()]";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression();
+        println!("{ast:?}");
+        match ast.unwrap() {
+            List(values) => {
+                assert_eq!(3, values.len());
+            }
+            _ => {assert!(false)}
+        }
     }
 }

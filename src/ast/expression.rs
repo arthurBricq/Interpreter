@@ -28,6 +28,7 @@ pub enum Expr {
     AssignmentExpr(String, Box<Expr>),
     IdentExpr(String),
     FunctionCall(String, Vec<Expr>),
+    List(Vec<Expr>),
 }
 
 impl Expr {
@@ -93,6 +94,9 @@ impl Expr {
                 } else {
                     Err(EvalError::Error("Function not found"))
                 }
+            }
+            Expr::List(values) => {
+                panic!("List evaluation not implemented")
             }
         }
     }
