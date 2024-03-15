@@ -14,6 +14,7 @@ use crate::token::{Comp, Op};
 pub enum Value {
     IntValue(i64),
     BoolValue(bool),
+    List(Vec<Value>),
     None
 }
 
@@ -97,10 +98,38 @@ impl Expr {
                 }
             }
             List(values) => {
-                panic!("List evaluation not implemented")
+                let mut to_return  = vec![];
+                for value in values {
+                    match value.eval(buf, module) {
+                        Ok(result) => to_return.push(result),
+                        Err(err) => return Err(err)
+                    }
+                }
+                Ok(Value::List(to_return))
             }
             ListAccess(name, index) => {
-                panic!("List evaluation not implemented")
+                // Find the index where to look up
+                let pos = match index.eval(buf, module) {
+                    Ok(IntValue(pos)) => {
+                        pos as usize
+                    }
+                    Err(err) => return Err(err),
+                    _ => return Err(EvalError::Error("When accessing a list, the index must be of type int"))
+                };
+                
+                // Find the value at this index
+                match buf.get(name) {
+                    Some(value) => {
+                        match value {
+                            Value::List(values) => {
+                                let n = values.len();
+                                Ok(values[pos].clone())
+                            }
+                            _ => Err(EvalError::Error("Only list can be accessed"))
+                        }
+                    }
+                    None => Err(EvalError::UnknownVariable(name.clone()))
+                }
             }
         }
     }
@@ -121,8 +150,8 @@ impl Expr {
 mod tests {
     use std::collections::HashMap;
 
-    use crate::ast::expression::Value;
-    use crate::ast::expression::Value::BoolValue;
+    use crate::ast::expression::{Expr, Value};
+    use crate::ast::expression::Value::{BoolValue, IntValue, List};
     use crate::error::EvalError;
     use crate::parser::Parser;
     use crate::token::tokenize;
@@ -136,7 +165,7 @@ mod tests {
     }
     
     #[test]
-    fn test_parse_bool_comparison() {
+    fn test_simple_bool_eval() {
         // test ==
         assert_expression_evaluation("1 == 1", Ok(BoolValue(true)));
         assert_expression_evaluation("1 == 2", Ok(BoolValue(false)));
@@ -154,12 +183,42 @@ mod tests {
     }
     
     #[test]
-    fn test_parse_bool_comparison_order_of_operation() {
+    fn test_bool_eval() {
         assert_expression_evaluation("1 + 1 == 2", Ok(BoolValue(true)));
         assert_expression_evaluation("(1 + 1) == 2", Ok(BoolValue(true)));
         assert_expression_evaluation("(1 + 1) == 2 * 1", Ok(BoolValue(true)));
         assert_expression_evaluation("(1 + 1) * 2 == 2 * 2", Ok(BoolValue(true)));
         assert_expression_evaluation("(1 + 1) * 2 + 2 == 6", Ok(BoolValue(true)));
+    }
+    
+    #[test]
+    fn test_list_eval() {
+        let text = "[1,2,3]";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression().unwrap();
+        let result = ast.eval(&mut HashMap::new(), None);
+        println!("{result:?}");
+        assert_eq!(result, Ok(List(vec![IntValue(1), IntValue(2), IntValue(3)])))
+    }
+
+    #[test]
+    fn test_list_access_eval() {
+        fn get_list_access_ast(at: usize) -> Expr {
+            let text = format!("my_list[{at}]");
+            let tokens = tokenize(&text.to_string()).unwrap();
+            let mut parser = Parser::new(&tokens);
+            let ast = parser.parse_expression().unwrap();
+            ast
+        }
+        
+        let mut data = HashMap::new();
+        let my_list = List(vec![IntValue(1), IntValue(2), IntValue(3)]);
+        data.insert("my_list".to_string(), my_list);
+        
+        assert_eq!(Ok(IntValue(1)), get_list_access_ast(0).eval(&mut data, None));
+        assert_eq!(Ok(IntValue(2)), get_list_access_ast(1).eval(&mut data, None));
+        assert_eq!(Ok(IntValue(3)), get_list_access_ast(2).eval(&mut data, None));
     }
     
 }
