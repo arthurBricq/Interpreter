@@ -92,9 +92,9 @@ impl<'a> Parser<'a> {
                     Ok(arguments) => {
                         // Parse the body of the function
                         if let Some(body) = self.parse_compound_statement() {
-                            return Ok(Some(Function(name, arguments, body)))
+                            return Ok(Some(Function(name, arguments, body)));
                         } else {
-                            return Err(WrongFunctionBody)
+                            return Err(WrongFunctionBody);
                         }
                     }
                     Err(e) => return Err(e)
@@ -125,7 +125,7 @@ impl<'a> Parser<'a> {
                         self.index += 1;
                     }
                     _ => {
-                        return Err(WrongFunctionArgumentList)
+                        return Err(WrongFunctionArgumentList);
                     }
                 }
             }
@@ -135,30 +135,32 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Try to parse the list of arguments in a function call
-    fn parse_function_call_argument_list(&mut self) -> Option<Vec<Expr>> {
-        if let Some(Token::LPar) = self.peek() {
+    /// Try to parse a list of expression contained between a left token and a right token
+    /// and separated by a comma.
+    fn parse_expr_list(&mut self, left_matcher: fn(Option<Token>) -> bool, right_matcher: fn(Option<Token>) -> bool) -> Option<Vec<Expr>> {
+        if left_matcher(self.peek()) {
             self.index += 1;
             let mut to_return = vec![];
             // It's possible that a function has no argument at all
-            if let Some(Token::RPar) = self.peek() {
+            if right_matcher(self.peek()) {
                 self.index += 1;
                 return Some(to_return);
             }
+            
             // Otherwise, parse all the arguments
             while let Ok(expr) = self.parse_expression() {
                 to_return.push(expr);
                 match self.peek() {
                     None => {}
                     Some(Token::Comma) => self.index += 1,
-                    Some(Token::RPar) => {
-                        self.index += 1;
-                        return Some(to_return);
-                    }
                     _ => {}
                 }
-            }
 
+                if right_matcher(self.peek()) {
+                    self.index += 1;
+                    return Some(to_return);
+                }
+            }
         }
         None
     }
@@ -175,10 +177,10 @@ impl<'a> Parser<'a> {
                             if let Some(Token::Else) = self.peek() {
                                 self.index += 1;
                                 if let Some(else_statement) = self.parse_one_statement() {
-                                    return Some(If(expr, Box::new(body), Some(Box::new(else_statement))))
+                                    return Some(If(expr, Box::new(body), Some(Box::new(else_statement))));
                                 }
                             } else {
-                                return Some(If(expr, Box::new(body), None))
+                                return Some(If(expr, Box::new(body), None));
                             }
                         }
                     }
@@ -199,7 +201,7 @@ impl<'a> Parser<'a> {
             // TODO error handling
             return None;
         }
-        
+
         // Parse simple statement
         if let Ok(expr) = self.parse_expression() {
             if let Some(Token::SemiColon) = self.peek() {
@@ -207,10 +209,10 @@ impl<'a> Parser<'a> {
                 return Some(Statement::SimpleStatement(expr));
             }
         }
-        
+
         // Parse compound statement
         if let Some(compound) = self.parse_compound_statement() {
-            return Some(compound)
+            return Some(compound);
         }
         None
     }
@@ -254,14 +256,23 @@ impl<'a> Parser<'a> {
         if let Some(Token::Ident(name)) = self.peek() {
             self.index += 1;
             // Try to parse an argument list
-            if let Some(arguments) = self.parse_function_call_argument_list() {
-                return Some(FunctionCall(name, arguments))
+            if let Some(arguments) = self.parse_expr_list(|token| matches!(token, Some(Token::LPar)), |token| matches!(token, Some(Token::RPar))) {
+                return Some(FunctionCall(name, arguments));
             }
         }
         self.set_index(checkpoint);
         None
     }
-    
+
+    fn parse_list_expr(&mut self) -> Option<Expr> {
+        let checkpoint = self.index;
+        if let Some(Token::LBracket) = self.peek() {
+            self.index += 1;
+        }
+        self.set_index(checkpoint);
+        None
+    }
+
     /// Parse boolean operators, such as '==', '<', '>'
     fn parse_comparison_expr(&mut self) -> Option<Expr> {
         let checkpoint = self.index;
@@ -272,8 +283,7 @@ impl<'a> Parser<'a> {
                 if let Some(right) = self.parse_comparison_expr() {
                     return Some(CompareExpr(Box::new(left), cmp, Box::new(right)));
                 }
-            }
-            else {
+            } else {
                 return Some(left);
             }
         }
@@ -291,8 +301,7 @@ impl<'a> Parser<'a> {
                 if let Some(right) = self.parse_additive_expr() {
                     return Some(BinaryExpr(Box::new(left), y, Box::new(right)));
                 }
-            } 
-            else {
+            } else {
                 return Some(left);
             }
         }
@@ -335,15 +344,15 @@ impl<'a> Parser<'a> {
 
         // Function call
         if let Some(expr) = self.parse_function_call_expr() {
-            return Some(expr)
+            return Some(expr);
         }
-        
+
         // Identifier
         if let Some(Token::Ident(s)) = self.peek() {
             self.index += 1;
             return Some(IdentExpr(s));
         }
-        
+
         // Parenthesis
         let checkpoint = self.index;
         if let Some(Token::LPar) = self.consume() {
@@ -354,7 +363,9 @@ impl<'a> Parser<'a> {
             }
         }
         self.set_index(checkpoint);
-        
+
+        // List
+
         // - Something
         if let Some(Token::TokenOp(Op::Minus)) = self.peek() {
             self.index += 1;
@@ -363,7 +374,6 @@ impl<'a> Parser<'a> {
             }
         }
 
-        
         // Default case
         None
     }
@@ -562,7 +572,7 @@ fn my_func_name() {
         }
         println!("{tokens:?}");
     }
-    
+
     pub(crate) fn get_simple_file() -> String {
         std::fs::read_to_string("TestData/simple_file.txt").unwrap()
     }
@@ -617,7 +627,7 @@ fn my_func_name() {
         println!("{ast:?}");
         assert!(matches!(ast[0], Statement::If(_, _, Some(_))))
     }
-    
+
     #[test]
     fn test_parse_bool_value() {
         let text = "a = true;";
@@ -637,7 +647,7 @@ fn my_func_name() {
             _ => panic!("false")
         }
     }
-    
+
     #[test]
     fn test_parse_bool_comparison_equal() {
         let text = "a == true";
@@ -655,7 +665,7 @@ fn my_func_name() {
         let ast = parser.parse_expression().unwrap();
         assert!(matches!(ast, Expr::CompareExpr(_, Comp::Higher, _)))
     }
-    
+
     #[test]
     fn test_parse_bool_comparison_higher_eq() {
         let text = "a >= 1";
@@ -673,5 +683,4 @@ fn my_func_name() {
         let ast = parser.parse_expression().unwrap();
         assert!(matches!(ast, BinaryExpr(_, _, _)))
     }
-    
 }
