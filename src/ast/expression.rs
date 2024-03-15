@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::ast::declaration::Declaration;
-use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, ParenthesisExpr};
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, ListAccess, ParenthesisExpr};
 use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::error::EvalError;
 use crate::error::EvalError::{MultipleError, UnknownVariable};
@@ -29,6 +29,7 @@ pub enum Expr {
     IdentExpr(String),
     FunctionCall(String, Vec<Expr>),
     List(Vec<Expr>),
+    ListAccess(String, Box<Expr>),
 }
 
 impl Expr {
@@ -95,7 +96,10 @@ impl Expr {
                     Err(EvalError::Error("Function not found"))
                 }
             }
-            Expr::List(values) => {
+            List(values) => {
+                panic!("List evaluation not implemented")
+            }
+            ListAccess(name, index) => {
                 panic!("List evaluation not implemented")
             }
         }

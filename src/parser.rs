@@ -1,7 +1,7 @@
 use crate::ast::declaration::{Declaration, FnArg};
 use crate::ast::declaration::Declaration::Function;
 use crate::ast::expression::Expr;
-use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, NegExpr, ParenthesisExpr};
+use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, ListAccess, NegExpr, ParenthesisExpr};
 use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::ast::statement::Statement;
 use crate::ast::statement::Statement::{CompoundStatement, If};
@@ -278,6 +278,21 @@ impl<'a> Parser<'a> {
         self.set_index(checkpoint);
         None
     }
+    
+    fn parse_list_access_expr(&mut self) -> Option<Expr> {
+        let checkpoint = self.index;
+        if let Some(Token::Ident(name)) = self.consume() {
+            if let Some(Token::LBracket) = self.consume() {
+                if let Ok(expr) = self.parse_expression() {
+                    if let Some(Token::RBracket) = self.consume() {
+                        return Some(ListAccess(name, Box::new(expr)))
+                    }
+                }
+            }
+        }
+        self.set_index(checkpoint);
+        None
+    }
 
     /// Parse boolean operators, such as '==', '<', '>'
     fn parse_comparison_expr(&mut self) -> Option<Expr> {
@@ -353,6 +368,11 @@ impl<'a> Parser<'a> {
             return Some(expr);
         }
 
+        // List access
+        if let Some(expr) = self.parse_list_access_expr() {
+            return Some(expr);
+        }
+
         // Identifier
         if let Some(Token::Ident(s)) = self.peek() {
             self.index += 1;
@@ -416,7 +436,7 @@ pub fn parse_statements(tokens: &Vec<Token>) -> Vec<Statement> {
 pub(crate) mod tests {
     use crate::ast::declaration::Declaration;
     use crate::ast::expression::{Expr, Value};
-    use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, List};
+    use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, ConstExpr, IdentExpr, List, ListAccess};
     use crate::ast::expression::Value::IntValue;
     use crate::ast::statement::Statement;
     use crate::ast::statement::Statement::SimpleStatement;
@@ -707,6 +727,7 @@ fn my_func_name() {
             _ => {assert!(false)}
         }
     }
+    
     #[test]
     fn test_parse_list_with_expression() {
         let text = "[1+1,(2)*3,foo()]";
@@ -719,6 +740,36 @@ fn my_func_name() {
                 assert_eq!(3, values.len());
             }
             _ => {assert!(false)}
+        }
+    }
+    
+    #[test]
+    fn test_simple_list_access() {
+        let text = "dog[0]";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression().unwrap();
+        println!("{ast:?}");
+        match ast { 
+            ListAccess(name, index) => {
+                assert!(matches!(index.as_ref(), &ConstExpr(_)))
+            }
+            _ => assert!(false)
+        }
+    }
+    
+    #[test]
+    fn test_list_access() {
+        let text = "dog[i]";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression().unwrap();
+        println!("{ast:?}");
+        match ast {
+            ListAccess(name, index) => {
+                assert!(matches!(index.as_ref(), &IdentExpr(_)))
+            }
+            _ => assert!(false)
         }
     }
 }
