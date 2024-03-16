@@ -3,6 +3,7 @@ use std::io::read_to_string;
 
 use crate::ast::expression::{Expr, Value};
 use crate::error::EvalError;
+use crate::error::EvalError::Error;
 use crate::module::Module;
 
 /// A statement is something that does not evaluate to something
@@ -24,12 +25,32 @@ pub enum Statement {
 }
 
 #[derive(Debug, PartialEq, Eq)]
+/// Holds the result of a statement's runtime evaluation
 pub enum StatementEval {
     Return(Value),
+    Break,
     None
 }
 
 impl Statement {
+    
+    fn eval_statement_list(inputs: &mut HashMap<String, Value>, module: Option<&Module>, statements: &Vec<Statement>) -> Result<StatementEval, EvalError> {
+        for stm in statements {
+            match stm.eval(inputs, module) {
+                Ok(StatementEval::None) => {}
+                Ok(StatementEval::Break) => return Ok(StatementEval::Break),
+                Ok(StatementEval::Return(result)) => {
+                    // If any of the statement returned anything, we return
+                    // TODO there is probably a problem here.
+                    return Ok(StatementEval::Return(result))
+                }
+                Err(err) => return Err(err)
+            }
+        }
+        Ok(StatementEval::None)
+    }
+    
+    
     pub fn eval(&self, inputs: &mut HashMap<String, Value>, module: Option<&Module>) -> Result<StatementEval, EvalError> {
         match self {
             Statement::SimpleStatement(expr) => {
@@ -48,18 +69,7 @@ impl Statement {
                 // All the new variables defined in the new scope are bound to remain in the scope
                 // This forbid variable-side effect
                 let mut copied_environment = inputs.clone();
-                for stm in statements {
-                    match stm.eval(&mut copied_environment, module) {
-                        Ok(StatementEval::None) => {}
-                        Ok(StatementEval::Return(result)) => {
-                            // If any of the statement returned anything, we return
-                            // TODO there is probably a problem here.
-                            return Ok(StatementEval::Return(result))
-                        }
-                        Err(err) => return Err(err)
-                    }
-                }
-                Ok(StatementEval::None)
+                Self::eval_statement_list(&mut copied_environment, module, statements)
             }
             Statement::If(condition, body, else_statement)  => {
                 match condition.eval(inputs, module) {
@@ -83,10 +93,27 @@ impl Statement {
                 }
             }
             Statement::Loop(body) => {
-               panic!("Loops evaluation not implemented") 
+                // We know that the body is necessary a compound statement
+                // Unfortunately, it is not possible to call `
+                match body.as_ref() {
+                    Statement::CompoundStatement(statements) => {
+                        while let Ok(result) = Self::eval_statement_list(inputs, module, statements) {
+                            match result {
+                                StatementEval::Break => {
+                                    return Ok(StatementEval::None)
+                                }
+                                _ => {}
+                            }
+                        }
+                        
+                    }
+                    _ => return Err(Error("A loop statement can only be associated with a compound statement."))
+                }
+                
+                Ok(StatementEval::None)
             }
             Statement::Break => {
-                panic!("Loops evaluation not implemented")
+                Ok(StatementEval::Break)
             }
         }
     }
@@ -118,7 +145,7 @@ mod tests {
         assert_statement_eval("{a=1;a=2;}", Ok(StatementEval::None));
         assert_statement_eval("{a=1; b=1; return a + b}", Ok(StatementEval::Return(Value::IntValue(2))));
     }
-    
+
     #[test]
     fn test_error_when_using_variable_out_of_compound_scope() {
         // we want to test that a function does not have access to variables outside of its scope
@@ -173,9 +200,47 @@ fn main() {
         let tokens = tokenize(&text.to_string());
         let ast = parse_statements(&tokens.unwrap());
         let statement = &ast[0];
+        println!("Getting ready");
         let result = statement.eval(&mut HashMap::new(), None);
         println!("{result:?}");
         assert_eq!(result, Ok(StatementEval::Return(Value::IntValue(2))));
+    }
+    
+    #[test]
+    fn test_return_inside_compound() {
+        let text = "
+{
+    i = 0;
+    i = i + 1;
+    return i;
+}
+        ";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        let statement = &ast[0];
+        let result = statement.eval(&mut HashMap::new(), None);
+        println!("{result:?}");
+        assert_eq!(result, Ok(StatementEval::Return(Value::IntValue(1))));
+    }
+    
+    #[test]
+    fn test_simple_loop_eval() {
+        let text = "
+{
+    i = 0;
+    loop {
+        i = i + 1;
+        if (i == 10) { break; }
+    }
+    return i;
+}
+        ";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        let statement = &ast[0];
+        let result = statement.eval(&mut HashMap::new(), None);
+        println!("{result:?}");
+        assert_eq!(result, Ok(StatementEval::Return(Value::IntValue(10))));
     }
 
 }

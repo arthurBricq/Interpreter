@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::ast::declaration::Declaration;
-use crate::ast::expression::Value;
 use crate::ast::statement::StatementEval;
 use crate::error::EvalError;
 
