@@ -100,7 +100,19 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
         match ch.unwrap() {
             '+' => tokens.push(TokenOp(Plus)),
             '-' => tokens.push(TokenOp(Minus)),
-            '/' => tokens.push(TokenOp(Div)),
+            '/' => {
+                if let Some(&'/') = chars.peek() {
+                    chars.next();
+                    // If `//` is read, then skip until a break
+                    while let Some(char) = chars.next() {
+                        if char == '\n' {
+                            break
+                        }
+                    }
+                } else {
+                    tokens.push(TokenOp(Div))
+                }
+            },
             '*' => tokens.push(TokenOp(Times)),
             '(' => tokens.push(LPar),
             ')' => tokens.push(RPar),
@@ -212,7 +224,7 @@ mod tests {
     }
     
     #[test]
-    fn test_parse_double_char_operrators() {
+    fn test_parse_double_char_operators() {
         assert_tokens(
             "==",
             vec![TokenComp(Comp::Equal)],
@@ -237,5 +249,21 @@ mod tests {
             "1 <= 2",
             vec![Integer(1), TokenComp(Comp::LowerEq), Integer(2)],
         );
+    }
+
+    #[test]
+    fn test_comments() {
+
+        assert_tokens(
+            "\
+1 // Something
+// Hello
+2
+// Bla-Bla
+3
+            ",
+            vec![Integer(1), Integer(2), Integer(3)],
+        );
+
     }
 }

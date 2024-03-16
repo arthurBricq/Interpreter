@@ -4,18 +4,31 @@ This project is an interpreter for a programming language that I created: the **
 
 ABR = **A**rthur **Br**icq
 
-Don't get it wrong. This is just a learning tool ! I did this language only to **learn more about programming language theory and intepreters**.
+A programming language parser and its interpreter that I made to learn more about **parsing**, **programming language theory** and how **interpreters** work. 
 
 ## Features of the language
 
-- C-like differentiation of expressions and statements
-- Python-like typed variables
-- Python-like functions
-- Python-like list with access
-- If, Else, Loops
-- All common math operation supported
+The language is a sort of mix between C-syntax (with the concept of *expressions* and *statements*) that is very similar to Python (*variables are typed only at runtime*)
 
-The famous fibonnaci example
+The features of languages are the following.
+
+- C-like differentiation of expressions and statements
+- Python-like typed variables: `a = 1`
+  - Currently supported types: `bool`, `int`, `list`
+- Python-like functions: `fn foo(first_arg, second_arg)`
+- Python-like list: `my_list = [1,2,3]`
+  - access: `my_list[0]`
+  - mutation: `new_list = my_list + [4]`
+- If, Else-If, Else: `if (false) {foo()} else {bar()}`
+- All common math operation supported and can be used in a shell.
+
+I surely agree that the syntax of this language is weird. This is mostly because I had no clear vision of what I would do, when I would stop, and what would be more difficult. Really, this is a learning project.
+
+## Example
+
+### Fibonacci with recursive function
+
+The famous Fibonacci example,  with a recursive call.
 
 ```c
 fn fib(n) {
@@ -29,10 +42,10 @@ fn fib(n) {
 
 These features are missing for ABr to be 'ready'
 
-- Loops
 - || and &&
 - String
 - Char
+- Comments
 - Some built-in functions: len(), print(), etc
 
 # Shell-like interpreter
@@ -80,29 +93,3 @@ MultipleError([UnknownVariable("a"), UnknownVariable("b")])
 > a + b + c
 MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), UnknownVariable("c")])])  
 ```
-
-# RoadMap
-
-**Next milestone** : a calculator
-
-- new operators: 
-    - ** for power
-    - % for modulo
-    - == for equality test
-    - `<`
-    - `>`
-    
-**Next milestone** : Typing - Support float, integers, bool and string
-
-- [x] create a type system
-- [x] bool
-- [x] integer
-- [ ] float
-- [ ] string
-
-**Next milestone**: functions and logic
-
-- [ ] loop + break
-
-**Next milestone**: web-assembly deployment of the shell
-
