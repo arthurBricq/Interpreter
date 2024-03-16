@@ -11,8 +11,11 @@ Don't get it wrong. This is just a learning tool ! I did this language only to *
 - C-like differentiation of expressions and statements
 - Python-like typed variables
 - Python-like functions
+- Python-like list with access
 - If, Else, Loops
 - All common math operation supported
+
+The famous fibonnaci example
 
 ```c
 fn fib(n) {
@@ -27,10 +30,10 @@ fn fib(n) {
 These features are missing for ABr to be 'ready'
 
 - Loops
-- List
-  - Creation: `a = [1,2,3];`
-  - Access  : `a[2]`
 - || and &&
+- String
+- Char
+- Some built-in functions: len(), print(), etc
 
 # Shell-like interpreter
 

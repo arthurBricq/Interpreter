@@ -4,7 +4,7 @@ use crate::ast::declaration::Declaration;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, ListAccess, ParenthesisExpr};
 use crate::ast::expression::Value::{BoolValue, IntValue};
 use crate::error::EvalError;
-use crate::error::EvalError::{MultipleError, UnknownVariable};
+use crate::error::EvalError::{Error, MultipleError, UnknownVariable};
 use crate::module::Module;
 use crate::token::{Comp, Op};
 
@@ -53,10 +53,21 @@ impl Expr {
                     Op::Times => l * r,
                     Op::Div => l / r,
                 })),
+                (Ok(Value::List(values1)), Ok(Value::List(values2))) => {
+                    if let Op::Plus = op {
+                        let mut new_values = values1.clone();
+                        for v in &values2 {
+                            new_values.push(v.clone());
+                        }
+                        Ok(Value::List(new_values))
+                    } else {
+                        Err(Error("Only addition is supported for list"))
+                    }
+                }
                 (Err(r), Ok(_)) => Err(r),
                 (Ok(_), Err(err)) => Err(err),
                 (Err(err1), Err(err2)) => Err(MultipleError(vec![Box::new(err1), Box::new(err2)])),
-                _ => panic!("Not sure what is happening... You will have to debug this :'(")
+                _ => panic!("Binary operation not supported")
             }
             CompareExpr(l, cmp, r) => {
                 match (l.eval(buf, module), r.eval(buf, module)) {
@@ -219,6 +230,24 @@ mod tests {
         assert_eq!(Ok(IntValue(1)), get_list_access_ast(0).eval(&mut data, None));
         assert_eq!(Ok(IntValue(2)), get_list_access_ast(1).eval(&mut data, None));
         assert_eq!(Ok(IntValue(3)), get_list_access_ast(2).eval(&mut data, None));
+    }
+
+    #[test]
+    fn test_sum_of_list() {
+        let text = "\
+fn main() {
+    a = [3];
+    b = a + [1];
+    return b
+}
+        ";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        println!("{module:?}");
+        let result = module.run();
+        println!("{result:?}");
+        assert_eq!(result, Ok(List(vec![IntValue(3), IntValue(1)])));
     }
     
 }
