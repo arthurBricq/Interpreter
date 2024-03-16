@@ -183,8 +183,16 @@ impl<'a> Parser<'a> {
                 }
                 return Some(Statement::Return(expr));
             }
-            // TODO error handling
             return None;
+        }
+        
+        // Parse break statement
+        if let Some(Token::Break) = self.peek() {
+            self.index += 1;
+            if let Some(Token::SemiColon) = self.peek() {
+                self.index += 1;
+            }
+            return Some(Statement::Break)
         }
 
         // Parse simple statement
@@ -804,6 +812,25 @@ fn my_func_name() {
         println!("{ast:?}");
         assert!(matches!(ast, Statement::Loop(_)));
     }
-    
+
+    #[test]
+    fn test_simple_break_parsing() {
+        let text = "break";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_one_statement().unwrap();
+        println!("{ast:?}");
+        assert!(matches!(ast, Statement::Break));
+    }
+
+    #[test]
+    fn test_simple_break_parsing_with_semicolon() {
+        let text = "break;";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_one_statement().unwrap();
+        println!("{ast:?}");
+        assert!(matches!(ast, Statement::Break));
+    }
     
 }

@@ -18,7 +18,9 @@ pub enum Statement {
     /// The else is encapsulated as an optional statement
     If(Expr, Box<Statement>, Option<Box<Statement>>),
     /// Loops
-    Loop(Box<Statement>)
+    Loop(Box<Statement>),
+    /// break is a statement since it does not execute to a value but to a side effect
+    Break
 }
 
 impl Statement {
@@ -76,6 +78,9 @@ impl Statement {
             }
             Statement::Loop(body) => {
                panic!("Loops evaluation not implemented") 
+            }
+            Statement::Break => {
+                panic!("Loops evaluation not implemented")
             }
         }
     }
