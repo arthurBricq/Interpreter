@@ -83,12 +83,12 @@ fn print_fib_until(n) {
 
 These features are missing for ABr to be 'ready'
 
-- || and &&
+- More operator: ||, &&
 - String
 - Char
-- Some built-in functions: 
-  - print
-  - env
+- More built-in functions: 
+  - len
+  - print_env
 
 # Shell-like interpreter
 
