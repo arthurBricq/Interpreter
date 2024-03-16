@@ -165,4 +165,25 @@ fn main() {
         println!("{result:?}");
         assert_eq!(result, Ok(StatementEval::Return(IntValue(6))));
     }
+
+    #[test]
+    fn test_printing() {
+        let text = "\
+fn foo(n) {
+    print(n);
+}
+
+fn main() {
+    print(1);
+    foo(10);
+    foo(20);
+    return 0;
+}
+        ";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let module = parser.parse_module();
+        let result = module.run();
+        assert_eq!(result, Ok(StatementEval::Return(IntValue(0))));
+    }
 }

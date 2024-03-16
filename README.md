@@ -20,6 +20,9 @@ The features of languages are the following.
   - access: `my_list[0]`
   - mutation: `new_list = my_list + [4]`
 - If, Else-If, Else: `if (false) {foo()} else {bar()}`
+- Comments after `//`
+- A **standard-library** with basic functions:
+  - *print*
 - All common math operation supported and can be used in a shell.
 
 I surely agree that the syntax of this language is weird. This is mostly because I had no clear vision of what I would do, when I would stop, and what would be more difficult. Really, this is a learning project.
@@ -38,6 +41,44 @@ fn fib(n) {
 }
 ```
 
+### Fibonacci with a loop
+
+Same example, but to print the first n-values in order
+
+```c
+/// A function that prints the n first values of the Fibonacci sequence.
+/// Note that this function does not use recursive function but instead illustrates
+/// how to use a loop.
+fn print_fib_until(n) {
+    first = 0;
+    second = 1;
+    next = first + second;
+    
+    if (n <= 0) { return -1; }
+    print(first); 
+    
+    // print the first values
+    if (n >= 1) { print(second); }
+    if (n >= 2) { print(next); }
+    
+    // check that there is a loop needed
+    if (n < 3) { return 0; }
+    
+    n = n - 2;
+    loop {
+        first = second;
+        second = next;
+        next = first + second;
+        n = n - 1;
+        print(next);
+        if (n == 0) { break; }
+    }
+    
+    return 0;
+}
+```
+
+
 ## Missing features
 
 These features are missing for ABr to be 'ready'
@@ -45,16 +86,13 @@ These features are missing for ABr to be 'ready'
 - || and &&
 - String
 - Char
-- Comments
-- Some built-in functions: len(), print(), etc
+- Some built-in functions: 
+  - print
+  - env
 
 # Shell-like interpreter
 
-- Operation on integers: +, -, *, /
-- Python-like assignment
-- Usage of variables
-
-## Example
+The first step of this project was a shell. So here it what it looked like.
 
 ```console
 > 1 + 2 * 3

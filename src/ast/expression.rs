@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 
 use crate::ast::declaration::Declaration;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, ListAccess, ParenthesisExpr};
@@ -7,6 +8,7 @@ use crate::ast::statement::StatementEval;
 use crate::error::EvalError;
 use crate::error::EvalError::{Error, MultipleError, UnknownVariable};
 use crate::module::Module;
+use crate::std::Std;
 use crate::token::{Comp, Op};
 
 /// A value is the result of an evaluation
@@ -17,6 +19,17 @@ pub enum Value {
     BoolValue(bool),
     List(Vec<Value>),
     None
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IntValue(i) => write!(f, "{}", i),
+            BoolValue(b) =>  write!(f, "{}", b),
+            Value::List(values) => write!(f, "{:?}", values),
+            Value::None => write!(f, "__None__")
+        }
+    }
 }
 
 /// An expression is something that evaluates to something
@@ -91,9 +104,10 @@ impl Expr {
             }
             FunctionCall(name, inputs) => {
                 if module.is_none() {
-                    return Err(EvalError::Error("Module not found"))
+                    return Err(Error("Module not found"))
                 }
-                if let Some(Declaration::Function(_name, args, function_body)) =  module.unwrap().get_function(name) {
+                
+                if let Some(Declaration::Function(_, args, function_body)) =  module.unwrap().get_function(name) {
                     // We don't provide the function call with all the variables, but just with the provided arguments
                     // i. evaluate the inputs
                     let mut function_inputs = HashMap::new();
@@ -110,8 +124,16 @@ impl Expr {
                         Err(err) => Err(err),
                         _ => Ok(Value::None),
                     }
+                } else if Std::is_in_standard_lib(&name) {
+                    let mut evaluated_inputs = vec![];
+                    for input in inputs {
+                        if let Ok(value) = input.eval(buf, module) {
+                            evaluated_inputs.push(value)
+                        }
+                    }
+                    Std::eval(&name, &evaluated_inputs)
                 } else {
-                    Err(EvalError::Error("Function not found"))
+                    Err(Error("Function not found"))
                 }
             }
             List(values) => {

@@ -6,6 +6,7 @@ mod shell;
 mod token;
 mod error;
 mod module;
+mod std;
 
 fn main() {
     let mut shell = Shell::new();

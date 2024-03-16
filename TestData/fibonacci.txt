@@ -4,3 +4,34 @@ fn fib(n) {
     // Solve fibonacci using recursive function
     return fib(n-1) + fib(n-2);
 }
+
+/// A function that prints the n first values of the Fibonacci sequence.
+/// Note that this function does not use recursive function but instead illustrates
+/// how to use a loop.
+fn print_fib_until(n) {
+    first = 0;
+    second = 1;
+    next = first + second;
+    
+    if (n <= 0) { return -1; }
+    print(first); 
+    
+    // print the first values
+    if (n >= 1) { print(second); }
+    if (n >= 2) { print(next); }
+    
+    // check that there is a loop needed
+    if (n < 3) { return 0; }
+    
+    n = n - 2;
+    loop {
+        first = second;
+        second = next;
+        next = first + second;
+        n = n - 1;
+        print(next);
+        if (n == 0) { break; }
+    }
+    
+    return 0;
+}

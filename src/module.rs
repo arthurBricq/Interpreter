@@ -134,4 +134,20 @@ mod tests {
         inputs.insert("n".to_string(), IntValue(15));
         assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(610))));
     }
+    
+    #[test]
+    fn test_printing_fibo() {
+        let text = std::fs::read_to_string("TestData/fibonacci.txt").unwrap();
+        let tokens = tokenize(&text).unwrap();
+        let mut parser = Parser::new(&tokens);
+
+        let mut inputs = HashMap::new();
+
+        let module = parser.parse_module();
+        let func = module.get_function(&"print_fib_until".to_string()).unwrap();
+        
+        inputs.insert("n".to_string(), IntValue(10));
+        func.eval(&mut inputs, Some(&module));
+        
+    }
 }
