@@ -16,7 +16,9 @@ pub enum Statement {
     Return(Expr),
     /// If statement
     /// The else is encapsulated as an optional statement
-    If(Expr, Box<Statement>, Option<Box<Statement>>)
+    If(Expr, Box<Statement>, Option<Box<Statement>>),
+    /// Loops
+    Loop(Box<Statement>)
 }
 
 impl Statement {
@@ -71,6 +73,9 @@ impl Statement {
                     }
                     Err(err) => Err(err)
                 }
+            }
+            Statement::Loop(body) => {
+               panic!("Loops evaluation not implemented") 
             }
         }
     }

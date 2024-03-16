@@ -166,29 +166,14 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_one_statement(&mut self) -> Option<Statement> {
-        // Parse if statement
-        let checkpoint = self.index;
-        if let Some(Token::If) = self.consume() {
-            if let Some(Token::LPar) = self.consume() {
-                if let Ok(expr) = self.parse_expression() {
-                    if let Some(Token::RPar) = self.consume() {
-                        if let Some(body) = self.parse_compound_statement() {
-                            // If there is an else statement, parse it here
-                            if let Some(Token::Else) = self.peek() {
-                                self.index += 1;
-                                if let Some(else_statement) = self.parse_one_statement() {
-                                    return Some(If(expr, Box::new(body), Some(Box::new(else_statement))));
-                                }
-                            } else {
-                                return Some(If(expr, Box::new(body), None));
-                            }
-                        }
-                    }
-                }
-            }
+        if let Some(statement) = self.parse_if_statement() {
+            return Some(statement)
         }
-        self.set_index(checkpoint);
 
+        if let Some(statement) = self.parse_loop_statement() {
+            return Some(statement)
+        }
+        
         // Parse return statement
         if let Some(Token::Return) = self.peek() {
             self.index += 1;
@@ -214,6 +199,43 @@ impl<'a> Parser<'a> {
         if let Some(compound) = self.parse_compound_statement() {
             return Some(compound);
         }
+        
+        None
+    }
+    
+    fn parse_if_statement(&mut self) -> Option<Statement> {
+        let checkpoint = self.index;
+        if let Some(Token::If) = self.consume() {
+            if let Some(Token::LPar) = self.consume() {
+                if let Ok(expr) = self.parse_expression() {
+                    if let Some(Token::RPar) = self.consume() {
+                        if let Some(body) = self.parse_compound_statement() {
+                            // If there is an else statement, parse it here
+                            if let Some(Token::Else) = self.peek() {
+                                self.index += 1;
+                                if let Some(else_statement) = self.parse_one_statement() {
+                                    return Some(If(expr, Box::new(body), Some(Box::new(else_statement))));
+                                }
+                            } else {
+                                return Some(If(expr, Box::new(body), None));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.set_index(checkpoint);
+        None
+    }
+    
+    fn parse_loop_statement(&mut self) -> Option<Statement> {
+        let checkpoint = self.index;
+        if let Some(Token::Loop) = self.consume() {
+            if let Some(body) = self.parse_compound_statement() {
+                return Some(Statement::Loop(Box::new(body)))
+            }
+        }
+        self.set_index(checkpoint);
         None
     }
 
@@ -772,4 +794,16 @@ fn my_func_name() {
             _ => assert!(false)
         }
     }
+    
+    #[test]
+    fn test_simple_loop_parsing() {
+        let text = "loop {i = i+1;}";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_one_statement().unwrap();
+        println!("{ast:?}");
+        assert!(matches!(ast, Statement::Loop(_)));
+    }
+    
+    
 }
