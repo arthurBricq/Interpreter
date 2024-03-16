@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::ast::declaration::Declaration;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, ListAccess, ParenthesisExpr};
 use crate::ast::expression::Value::{BoolValue, IntValue};
+use crate::ast::statement::StatementEval;
 use crate::error::EvalError;
 use crate::error::EvalError::{Error, MultipleError, UnknownVariable};
 use crate::module::Module;
@@ -92,7 +93,8 @@ impl Expr {
                 if module.is_none() {
                     return Err(EvalError::Error("Module not found"))
                 }
-                if let Some(Declaration::Function(_name, args, func)) =  module.unwrap().get_function(name) {
+                if let Some(Declaration::Function(_name, args, function_body)) =  module.unwrap().get_function(name) {
+                    // We don't provide the function call with all the variables, but just with the provided arguments
                     // i. evaluate the inputs
                     let mut function_inputs = HashMap::new();
                     for i in 0..args.len() {
@@ -102,8 +104,12 @@ impl Expr {
                             function_inputs.insert(arg_name.0.clone(), value);
                         }
                     }
-                    // We don't provide the function call with all the variables, but just with the provided arguments
-                    func.eval(&mut function_inputs, module)
+                    
+                    match function_body.eval(&mut function_inputs, module) {
+                        Ok(StatementEval::Return(result)) => Ok(result),
+                        Err(err) => Err(err),
+                        _ => Ok(Value::None),
+                    }
                 } else {
                     Err(EvalError::Error("Function not found"))
                 }
@@ -163,6 +169,7 @@ mod tests {
 
     use crate::ast::expression::{Expr, Value};
     use crate::ast::expression::Value::{BoolValue, IntValue, List};
+    use crate::ast::statement::StatementEval;
     use crate::error::EvalError;
     use crate::parser::Parser;
     use crate::token::tokenize;
@@ -247,7 +254,7 @@ fn main() {
         println!("{module:?}");
         let result = module.run();
         println!("{result:?}");
-        assert_eq!(result, Ok(List(vec![IntValue(3), IntValue(1)])));
+        assert_eq!(result, Ok(StatementEval::Return(List(vec![IntValue(3), IntValue(1)]))));
     }
     
 }

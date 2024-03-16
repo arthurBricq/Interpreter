@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::ast::declaration::Declaration;
 use crate::ast::expression::Value;
+use crate::ast::statement::StatementEval;
 use crate::error::EvalError;
 
 #[derive(Debug)]
@@ -26,7 +27,7 @@ impl Module {
     }
 
     /// Evaluate the `main` function
-    pub fn run(&self) -> Result<Value, EvalError> {
+    pub fn run(&self) -> Result<StatementEval, EvalError> {
         match self.get_function(&"main".to_string()) {
             None => Err(EvalError::Error("Function main not found")),
             Some(main) => main.eval(&mut HashMap::new(), Some(&self))
@@ -46,6 +47,7 @@ mod tests {
     use std::collections::HashMap;
 
     use crate::ast::expression::Value::{BoolValue, IntValue};
+    use crate::ast::statement::StatementEval;
     use crate::parser::Parser;
     use crate::token::tokenize;
 
@@ -68,15 +70,15 @@ mod tests {
 
         let bar = module.get_function(&"bar".to_string()).unwrap();
         let result = bar.eval(&mut HashMap::new(), Some(&module));
-        assert_eq!(result, Ok(IntValue(0)));
+        assert_eq!(result, Ok(StatementEval::Return(IntValue(0))));
 
         let dog = module.get_function(&"dog".to_string()).unwrap();
         let result = dog.eval(&mut HashMap::new(), Some(&module));
-        assert_eq!(result, Ok(IntValue(0)));
+        assert_eq!(result, Ok(StatementEval::Return(IntValue(0))));
 
         let cat = module.get_function(&"cat".to_string()).unwrap();
         let result = cat.eval(&mut HashMap::new(), Some(&module));
-        assert_eq!(result, Ok(IntValue(20)));
+        assert_eq!(result, Ok(StatementEval::Return(IntValue(20))));
     }
 
     #[test]
@@ -88,11 +90,11 @@ mod tests {
 
         let returns_true = module.get_function(&"returns_true".to_string()).unwrap();
         let result = returns_true.eval(&mut HashMap::new(), Some(&module));
-        assert_eq!(result, Ok(BoolValue(true)));
+        assert_eq!(result, Ok(StatementEval::Return(BoolValue(true))));
 
         let returns_false = module.get_function(&"returns_false".to_string()).unwrap();
         let result = returns_false.eval(&mut HashMap::new(), Some(&module));
-        assert_eq!(result, Ok(BoolValue(false)));
+        assert_eq!(result, Ok(StatementEval::Return(BoolValue(false))));
     }
     
     #[test]
@@ -107,30 +109,30 @@ mod tests {
         let func = module.get_function(&"fib".to_string()).unwrap();
 
         inputs.insert("n".to_string(), IntValue(0));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(0)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(0))));
         
         inputs.insert("n".to_string(), IntValue(1));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(1)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(1))));
         
         inputs.insert("n".to_string(), IntValue(2));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(1)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(1))));
 
         inputs.insert("n".to_string(), IntValue(3));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(2)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(2))));
 
         inputs.insert("n".to_string(), IntValue(4));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(3)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(3))));
 
         inputs.insert("n".to_string(), IntValue(5));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(5)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(5))));
 
         inputs.insert("n".to_string(), IntValue(6));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(8)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(8))));
 
         inputs.insert("n".to_string(), IntValue(10));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(55)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(55))));
 
         inputs.insert("n".to_string(), IntValue(15));
-        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(IntValue(610)));
+        assert_eq!(func.eval(&mut inputs, Some(&module)), Ok(StatementEval::Return(IntValue(610))));
     }
 }

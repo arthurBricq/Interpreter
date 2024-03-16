@@ -23,18 +23,24 @@ pub enum Statement {
     Break
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum StatementEval {
+    Return(Value),
+    None
+}
+
 impl Statement {
-    pub fn eval(&self, inputs: &mut HashMap<String, Value>, module: Option<&Module>) -> Result<Value, EvalError> {
+    pub fn eval(&self, inputs: &mut HashMap<String, Value>, module: Option<&Module>) -> Result<StatementEval, EvalError> {
         match self {
             Statement::SimpleStatement(expr) => {
                 match expr.eval(inputs, module) {
-                    Ok(_) => return Ok(Value::None),
+                    Ok(_) => return Ok(StatementEval::None),
                     Err(err) => return Err(err)
                 }
             }
             Statement::Return(expr) => {
                 return match expr.eval(inputs, module) {
-                    Ok(result) => Ok(result),
+                    Ok(result) => Ok(StatementEval::Return(result)),
                     Err(err) => Err(err)
                 }
             }
@@ -44,16 +50,16 @@ impl Statement {
                 let mut copied_environment = inputs.clone();
                 for stm in statements {
                     match stm.eval(&mut copied_environment, module) {
-                        Ok(Value::None) => {}
-                        Ok(result) => {
+                        Ok(StatementEval::None) => {}
+                        Ok(StatementEval::Return(result)) => {
                             // If any of the statement returned anything, we return
                             // TODO there is probably a problem here.
-                            return Ok(result)
+                            return Ok(StatementEval::Return(result))
                         }
                         Err(err) => return Err(err)
                     }
                 }
-                Ok(Value::None)
+                Ok(StatementEval::None)
             }
             Statement::If(condition, body, else_statement)  => {
                 match condition.eval(inputs, module) {
@@ -70,7 +76,7 @@ impl Statement {
                         } else if let Some(else_body) = else_statement {
                             else_body.eval(inputs, module)
                         } else { 
-                            Ok(Value::None)
+                            Ok(StatementEval::None)
                         }
                     }
                     Err(err) => Err(err)
@@ -90,12 +96,13 @@ impl Statement {
 mod tests {
     use std::collections::HashMap;
     use crate::ast::expression::Value;
+    use crate::ast::statement::StatementEval;
 
     use crate::error::EvalError;
     use crate::parser::{parse_statements, Parser};
     use crate::token::tokenize;
 
-    fn assert_statement_eval(text: &str, expected: Result<Value, EvalError>) {
+    fn assert_statement_eval(text: &str, expected: Result<StatementEval, EvalError>) {
         let tokens = tokenize(&text.to_string()).unwrap();
         let mut parser = Parser::new(&tokens);
         let statements = parser.parse_statements();
@@ -107,10 +114,11 @@ mod tests {
 
     #[test]
     fn test_statement_eval() {
-        assert_statement_eval("a=1;", Ok(Value::None));
-        assert_statement_eval("{a=1;a=2;}", Ok(Value::None));
-        assert_statement_eval("{a=1; b=1; return a + b}", Ok(Value::IntValue(2)));
+        assert_statement_eval("a=1;", Ok(StatementEval::None));
+        assert_statement_eval("{a=1;a=2;}", Ok(StatementEval::None));
+        assert_statement_eval("{a=1; b=1; return a + b}", Ok(StatementEval::Return(Value::IntValue(2))));
     }
+    
     #[test]
     fn test_error_when_using_variable_out_of_compound_scope() {
         // we want to test that a function does not have access to variables outside of its scope
@@ -136,7 +144,7 @@ fn main() {
         let tokens = tokenize(&text.to_string());
         let ast = parse_statements(&tokens.unwrap());
         let statement = &ast[0];
-        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Value::IntValue(3)))
+        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(StatementEval::Return(Value::IntValue(3))))
     }
     
     #[test]
@@ -145,7 +153,7 @@ fn main() {
         let tokens = tokenize(&text.to_string());
         let ast = parse_statements(&tokens.unwrap());
         let statement = &ast[0];
-        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(Value::IntValue(4)))
+        assert_eq!(statement.eval(&mut HashMap::new(), None), Ok(StatementEval::Return(Value::IntValue(4))))
     }
     
     #[test]
@@ -167,7 +175,7 @@ fn main() {
         let statement = &ast[0];
         let result = statement.eval(&mut HashMap::new(), None);
         println!("{result:?}");
-        assert_eq!(result, Ok(Value::IntValue(2)));
+        assert_eq!(result, Ok(StatementEval::Return(Value::IntValue(2))));
     }
 
 }
