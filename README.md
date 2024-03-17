@@ -14,7 +14,7 @@ The features of languages are the following.
 
 - C-like differentiation of expressions and statements
 - Python-like typed variables: `a = 1`
-  - Currently supported types: `bool`, `int`, `list`
+  - Currently supported types: `bool`, `int`, `list`, `string`
 - Python-like functions: `fn foo(first_arg, second_arg)`
 - Python-like list: `my_list = [1,2,3]`
   - access: `my_list[0]`
@@ -27,7 +27,21 @@ The features of languages are the following.
 
 I surely agree that the syntax of this language is weird. This is mostly because I had no clear vision of what I would do, when I would stop, and what would be more difficult. Really, this is a learning project.
 
-## Example
+## Examples
+
+### Hello world
+
+```c
+fn hello_world() {
+  print("Hello world!");
+}
+
+fn main() {
+  // A small example that illustrates how to print `Hello world` on the screen
+  hello_world();
+  return 0;
+}
+```
 
 ### Fibonacci with recursive function
 
@@ -78,17 +92,14 @@ fn print_fib_until(n) {
 }
 ```
 
-
 ## Missing features
 
 These features are missing for ABr to be 'ready'
 
 - More operator: ||, &&
-- String
 - Char
 - More built-in functions: 
   - len
-  - print_env
 
 # Shell-like interpreter
 

@@ -26,6 +26,7 @@ pub enum Token {
     TokenComp(Comp),
     Ident(String),
     Integer(i64),
+    String(String),
     Equal,
     /// Symbols
     LPar, RPar,
@@ -70,8 +71,8 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
             tokens.push(Integer(num as i64));
             continue;
         }
-
-        // Parse an word
+        
+        // Parse a word
         if ch.unwrap().is_alphabetic() || ch.unwrap() == '_' {
             let mut tmp: String = ch.unwrap().to_string();
             ch = chars.next();
@@ -94,9 +95,26 @@ pub fn tokenize(input: &String) -> Result<Vec<Token>, TokenError> {
                 "break" => Break,
                 &_ => Ident(tmp)
             });
-            continue;
+            continue
+        }
+        
+        // Parse a string
+        if ch.unwrap() == '"' {
+            let mut chars_in_string = vec![];
+            while let Some(next_ch) = chars.next() {
+                match next_ch { 
+                    '"' => {
+                        tokens.push(Token::String(chars_in_string.iter().collect()));
+                        break
+                    }
+                    _ => chars_in_string.push(next_ch),
+                }
+            }
+            ch = chars.next();
+            continue
         }
 
+        // Parse specific character
         match ch.unwrap() {
             '+' => tokens.push(TokenOp(Plus)),
             '-' => tokens.push(TokenOp(Minus)),
@@ -263,6 +281,20 @@ mod tests {
 3
             ",
             vec![Integer(1), Integer(2), Integer(3)],
+        );
+
+    }
+    #[test]
+    fn test_string() {
+
+        assert_tokens(
+            "\"Hello world\"",
+            vec![Token::String("Hello world".to_string())],
+        );
+        
+        assert_tokens(
+            "1 = \"Hello world\"",
+            vec![Integer(1), Equal, Token::String("Hello world".to_string())],
         );
 
     }

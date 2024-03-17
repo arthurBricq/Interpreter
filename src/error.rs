@@ -11,7 +11,7 @@ pub enum TokenError {
     UnknownChar(char)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ParserError {
     /// The parser did not find any match
     UnknownSyntax,

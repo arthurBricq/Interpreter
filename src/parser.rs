@@ -2,7 +2,7 @@ use crate::ast::declaration::{Declaration, FnArg};
 use crate::ast::declaration::Declaration::Function;
 use crate::ast::expression::Expr;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, ListAccess, NegExpr, ParenthesisExpr};
-use crate::ast::expression::Value::{BoolValue, IntValue};
+use crate::ast::expression::Value::{BoolValue, IntValue, StringValue};
 use crate::ast::statement::Statement;
 use crate::ast::statement::Statement::{CompoundStatement, If};
 use crate::error::ParserError;
@@ -376,10 +376,8 @@ impl<'a> Parser<'a> {
         self.set_index(checkpoint);
         None
     }
-
-    /// Matches constant, identifier or (expr) or -(primary)
-    fn parse_primary_expr(&mut self) -> Option<Expr> {
-        // Constant
+    
+    fn parse_constant_expr(&mut self) -> Option<Expr> {
         if let Some(Token::Integer(value)) = self.peek() {
             self.index += 1;
             return Some(ConstExpr(IntValue(value)));
@@ -391,6 +389,19 @@ impl<'a> Parser<'a> {
         if let Some(Token::False) = self.peek() {
             self.index += 1;
             return Some(ConstExpr(BoolValue(false)));
+        }
+        if let Some(Token::String(s)) = self.peek() {
+            self.index += 1;
+            return Some(ConstExpr(StringValue(s)));
+        }
+        None
+    }
+
+    /// Matches constant, identifier or (expr) or -(primary)
+    fn parse_primary_expr(&mut self) -> Option<Expr> {
+        // Function call
+        if let Some(expr) = self.parse_constant_expr() {
+            return Some(expr);
         }
 
         // Function call

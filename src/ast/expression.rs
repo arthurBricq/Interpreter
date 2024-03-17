@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use crate::ast::declaration::Declaration;
 use crate::ast::expression::Expr::{AssignmentExpr, BinaryExpr, CompareExpr, ConstExpr, FunctionCall, IdentExpr, List, ListAccess, ParenthesisExpr};
-use crate::ast::expression::Value::{BoolValue, IntValue};
+use crate::ast::expression::Value::{BoolValue, IntValue, StringValue};
 use crate::ast::statement::StatementEval;
 use crate::error::EvalError;
 use crate::error::EvalError::{Error, MultipleError, UnknownVariable};
@@ -17,6 +17,7 @@ use crate::token::{Comp, Op};
 pub enum Value {
     IntValue(i64),
     BoolValue(bool),
+    StringValue(String),
     List(Vec<Value>),
     None
 }
@@ -26,6 +27,7 @@ impl Display for Value {
         match self {
             IntValue(i) => write!(f, "{}", i),
             BoolValue(b) =>  write!(f, "{}", b),
+            StringValue(s) =>  write!(f, "{}", s),
             Value::List(values) => write!(f, "{:?}", values),
             Value::None => write!(f, "__None__")
         }
@@ -106,7 +108,7 @@ impl Expr {
                 if module.is_none() {
                     return Err(Error("Module not found"))
                 }
-                
+
                 if let Some(Declaration::Function(_, args, function_body)) =  module.unwrap().get_function(name) {
                     // We don't provide the function call with all the variables, but just with the provided arguments
                     // i. evaluate the inputs
@@ -118,7 +120,7 @@ impl Expr {
                             function_inputs.insert(arg_name.0.clone(), value);
                         }
                     }
-                    
+
                     match function_body.eval(&mut function_inputs, module) {
                         Ok(StatementEval::Return(result)) => Ok(result),
                         Err(err) => Err(err),
@@ -190,7 +192,8 @@ mod tests {
     use std::collections::HashMap;
 
     use crate::ast::expression::{Expr, Value};
-    use crate::ast::expression::Value::{BoolValue, IntValue, List};
+    use crate::ast::expression::Expr::ConstExpr;
+    use crate::ast::expression::Value::{BoolValue, IntValue, List, StringValue};
     use crate::ast::statement::StatementEval;
     use crate::error::EvalError;
     use crate::parser::Parser;
@@ -278,5 +281,14 @@ fn main() {
         println!("{result:?}");
         assert_eq!(result, Ok(StatementEval::Return(List(vec![IntValue(3), IntValue(1)]))));
     }
-    
+    #[test]
+    fn test_string_value() {
+        let text = "\"coucou\"";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let result = parser.parse_expression();
+        println!("{result:?}");
+        assert_eq!(result, Ok(ConstExpr(StringValue("coucou".to_string()))))
+    }
+
 }

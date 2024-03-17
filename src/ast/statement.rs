@@ -77,8 +77,9 @@ impl Statement {
                         let test = match cond {
                             Value::IntValue(i) => i != 0,
                             Value::BoolValue(b) => b,
-                            Value::None => return Err(EvalError::Error("'None' can't be casted to bool")),
-                            Value::List(_) => return Err(EvalError::Error("List can't be casted to bool"))
+                            Value::None => return Err(Error("'None' can't be casted to bool")),
+                            Value::StringValue(_) => return Err(Error("String can't be casted to bool")),
+                            Value::List(_) => return Err(Error("List can't be casted to bool"))
                         };
 
                         if test {
