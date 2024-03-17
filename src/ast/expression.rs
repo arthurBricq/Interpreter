@@ -29,7 +29,7 @@ impl Display for Value {
             BoolValue(b) =>  write!(f, "{}", b),
             StringValue(s) =>  write!(f, "{}", s),
             Value::List(values) => write!(f, "{:?}", values),
-            Value::None => write!(f, "__None__")
+            Value::None => write!(f, "")
         }
     }
 }
@@ -90,7 +90,7 @@ impl Expr {
                 (Err(r), Ok(_)) => Err(r),
                 (Ok(_), Err(err)) => Err(err),
                 (Err(err1), Err(err2)) => Err(MultipleError(vec![Box::new(err1), Box::new(err2)])),
-                _ => panic!("Binary operation not supported")
+                _ => Err(Error("Binary operation not supported"))
             }
             CompareExpr(l, cmp, r) => {
                 match (l.eval(buf, module), r.eval(buf, module)) {
@@ -122,7 +122,7 @@ impl Expr {
                     }
                     return Std::eval(&name, &evaluated_inputs)
                 }
-                
+
                 if module.is_none() {
                     return Err(Error("Module not found"))
                 }
@@ -300,7 +300,7 @@ fn main() {
         println!("{result:?}");
         assert_eq!(result, Ok(ConstExpr(StringValue("coucou".to_string()))))
     }
-    
+
     #[test]
     fn test_string_addition() {
         let text = "\"I love \" + \"susy\"";

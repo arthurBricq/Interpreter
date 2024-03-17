@@ -53,7 +53,12 @@ impl Shell {
                 match parse_expression(&tokens) {
                     Ok(ast) => {
                         match self.eval(&ast) {
-                            Ok(value) => println!("{value}"),
+                            Ok(value) => {
+                                match value {
+                                    Value::None => {}
+                                    _ => {println!("{value}")}
+                                }
+                            },
                             Err(e) => println!("{} {e:?}", "Error while evaluating: ".red()),
                         }
                     }

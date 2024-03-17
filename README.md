@@ -16,6 +16,7 @@ The features of languages are the following.
 - Python-like typed variables: `a = 1`
   - Currently supported types: `bool`, `int`, `list`, `string`
 - Python-like functions: `fn foo(first_arg, second_arg)`
+  - Like in python, variables are typed but the type is not declared. Furthermore, it is possible to change the type of variables.
 - Python-like list: `my_list = [1,2,3]`
   - access: `my_list[0]`
   - mutation: `new_list = my_list + [4]`
@@ -25,6 +26,10 @@ The features of languages are the following.
   - `print(a,b,c)` to print many variables
   - `len(my_list)` to get the length of a list
 - All common math operation supported and can be used in a shell.
+
+Furthermore, the parser and interpreter comes with a full supports for error. Here's an example of this.
+
+![](errors.png)
 
 I surely agree that the syntax of this language is weird. This is mostly because I had no clear vision of what I would do, when I would stop, and what would be more difficult. Really, this is a learning project.
 
@@ -52,7 +57,7 @@ The famous Fibonacci example,  with a recursive call.
 fn fib(n) {
   if (n == 0) {return 0;}
   if (n == 1) {return 1;}
-  return fib(n-1) + fib(n-);
+  return fib(n - 1) + fib(n - 2);
 }
 ```
 
@@ -93,51 +98,16 @@ fn print_fib_until(n) {
 }
 ```
 
-## Missing features
+## Shell-like interpreter
+
+By running `cargo run`, you can immediately start using the interpreter
+
+![](shell.png)
+
+# Missing features
 
 These features are missing for ABr to be 'ready'
 
 - More operator: ||, &&
 - Char
 
-# Shell-like interpreter
-
-The first step of this project was a shell. So here it what it looked like.
-
-```console
-> 1 + 2 * 3
-7 
-> (1 + 2) * 3
-9 
-> a = 100
-100
-> 3 * a
-300
-> b = a - 100
-0
-> b
-0
-> a - 10
-90
-> a    
-100
-> b = a - 10
-90
-> vars
-{"a": 100, "b": 90}
-```
-
-## Error handling
-
-This is an example of how errors are handled.
-
-```console
-> a
-UnknownVariable("a")
-> 1 + 2 + a
-UnknownVariable("a")
-> a + b
-MultipleError([UnknownVariable("a"), UnknownVariable("b")])
-> a + b + c
-MultipleError([UnknownVariable("a"), MultipleError([UnknownVariable("b"), UnknownVariable("c")])])  
-```
