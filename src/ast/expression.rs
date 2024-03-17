@@ -80,6 +80,13 @@ impl Expr {
                         Err(Error("Only addition is supported for list"))
                     }
                 }
+                (Ok(StringValue(s1)), Ok(StringValue(s2))) => {
+                    if let Op::Plus = op {
+                        Ok(StringValue(s1 + s2.as_str()))
+                    } else {
+                        Err(Error("Only addition is supported for list"))
+                    }
+                }
                 (Err(r), Ok(_)) => Err(r),
                 (Ok(_), Err(err)) => Err(err),
                 (Err(err1), Err(err2)) => Err(MultipleError(vec![Box::new(err1), Box::new(err2)])),
@@ -289,6 +296,17 @@ fn main() {
         let result = parser.parse_expression();
         println!("{result:?}");
         assert_eq!(result, Ok(ConstExpr(StringValue("coucou".to_string()))))
+    }
+    
+    #[test]
+    fn test_string_addition() {
+        let text = "\"I love \" + \"susy\"";
+        let tokens = tokenize(&text.to_string()).unwrap();
+        let mut parser = Parser::new(&tokens);
+        let ast = parser.parse_expression();
+        let result = ast.unwrap().eval(&mut HashMap::new(), None);
+        println!("{result:?}");
+        assert_eq!(result, Ok(StringValue("I love susy".to_string())))
     }
 
 }
