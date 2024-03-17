@@ -60,7 +60,6 @@ impl<'a> Parser<'a> {
     }
 
     fn is_finished(&self) -> bool {
-        println!("{}, {}", self.index, self.tokens.len());
         self.index == self.tokens.len()
     }
 

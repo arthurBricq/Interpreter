@@ -50,12 +50,10 @@ impl Shell {
     fn interpret(&mut self, text: &String) {
         match tokenize(text) {
             Ok(tokens) => {
-                println!("{}", format!("{tokens:?}").red());
                 match parse_expression(&tokens) {
                     Ok(ast) => {
-                        println!("{}", format!("{ast:?}").italic().green());
                         match self.eval(&ast) {
-                            Ok(value) => println!("{value:?}"),
+                            Ok(value) => println!("{value}"),
                             Err(e) => println!("{} {e:?}", "Error while evaluating: ".red()),
                         }
                     }
