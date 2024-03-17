@@ -112,6 +112,17 @@ impl Expr {
                 None => Err(UnknownVariable(name.clone())),
             }
             FunctionCall(name, inputs) => {
+                // Try to parse a standard library function
+                if Std::is_in_standard_lib(&name) {
+                    let mut evaluated_inputs = vec![];
+                    for input in inputs {
+                        if let Ok(value) = input.eval(buf, module) {
+                            evaluated_inputs.push(value)
+                        }
+                    }
+                    return Std::eval(&name, &evaluated_inputs)
+                }
+                
                 if module.is_none() {
                     return Err(Error("Module not found"))
                 }
@@ -133,14 +144,6 @@ impl Expr {
                         Err(err) => Err(err),
                         _ => Ok(Value::None),
                     }
-                } else if Std::is_in_standard_lib(&name) {
-                    let mut evaluated_inputs = vec![];
-                    for input in inputs {
-                        if let Ok(value) = input.eval(buf, module) {
-                            evaluated_inputs.push(value)
-                        }
-                    }
-                    Std::eval(&name, &evaluated_inputs)
                 } else {
                     Err(Error("Function not found"))
                 }

@@ -243,5 +243,38 @@ fn main() {
         println!("{result:?}");
         assert_eq!(result, Ok(StatementEval::Return(Value::IntValue(10))));
     }
+    
+    #[test]
+    fn test_len_function() {
+        let text = "
+{
+    a = [1,2,3];
+    return len(a);
+}
+        ";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        let statement = &ast[0];
+        let result = statement.eval(&mut HashMap::new(), None);
+        println!("{result:?}");
+        assert_eq!(result, Ok(StatementEval::Return(Value::IntValue(3))));
+    }
+    
+    #[test]
+    fn test_len_function_after_list_edit() {
+        let text = "
+{
+    a = [1,1,1];
+    a = a + [1];
+    return len(a);
+}
+        ";
+        let tokens = tokenize(&text.to_string());
+        let ast = parse_statements(&tokens.unwrap());
+        let statement = &ast[0];
+        let result = statement.eval(&mut HashMap::new(), None);
+        println!("{result:?}");
+        assert_eq!(result, Ok(StatementEval::Return(Value::IntValue(4))));
+    }
 
 }

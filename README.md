@@ -22,7 +22,8 @@ The features of languages are the following.
 - If, Else-If, Else: `if (false) {foo()} else {bar()}`
 - Comments after `//`
 - A **standard-library** with basic functions:
-  - *print*
+  - `print(a,b,c)` to print many variables
+  - `len(my_list)` to get the length of a list
 - All common math operation supported and can be used in a shell.
 
 I surely agree that the syntax of this language is weird. This is mostly because I had no clear vision of what I would do, when I would stop, and what would be more difficult. Really, this is a learning project.
@@ -98,8 +99,6 @@ These features are missing for ABr to be 'ready'
 
 - More operator: ||, &&
 - Char
-- More built-in functions: 
-  - len
 
 # Shell-like interpreter
 
